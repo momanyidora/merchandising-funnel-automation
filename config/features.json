@@ -1,0 +1,10 @@
+{
+  "vendor-management": true,
+  "procurement": true,
+  "inventory": true,
+  "receiving": false,
+  "warehouse-operations": false,
+  "retail-sales": false,
+  "sales-audit": false,
+  "financials": false
+}
