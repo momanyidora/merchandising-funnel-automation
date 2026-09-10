@@ -1,0 +1,521 @@
+openapi: 3.0.3
+
+info:
+  title: Vendor Management Service API
+  version: 1.0.0
+  description: API for managing suppliers, approved products, supplier costs, and vendor reliability history.
+
+servers:
+  - url: http://localhost:3001
+
+tags:
+  - name: Vendors
+    description: Vendor management operations
+  - name: Vendor Products
+    description: Products approved for a vendor
+  - name: Vendor Reliability
+    description: Vendor delivery and quantity reliability history
+
+paths:
+  /vendors:
+    post:
+      summary: Create a vendor
+      operationId: createVendor
+      tags:
+        - Vendors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVendorRequest"
+      responses:
+        "201":
+          description: Vendor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "400":
+          description: Invalid request
+
+    get:
+      summary: List vendors
+      operationId: listVendors
+      tags:
+        - Vendors
+      responses:
+        "200":
+          description: Vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vendor"
+
+  /vendors/{vendorId}:
+    get:
+      summary: Get a vendor
+      operationId: getVendor
+      tags:
+        - Vendors
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      responses:
+        "200":
+          description: Vendor retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "404":
+          description: Vendor not found
+
+    patch:
+      summary: Update a vendor
+      operationId: updateVendor
+      tags:
+        - Vendors
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVendorRequest"
+      responses:
+        "200":
+          description: Vendor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "400":
+          description: Invalid request
+        "404":
+          description: Vendor not found
+
+    delete:
+      summary: Delete a vendor
+      operationId: deleteVendor
+      tags:
+        - Vendors
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      responses:
+        "204":
+          description: Vendor deleted successfully
+        "404":
+          description: Vendor not found
+
+  /vendors/{vendorId}/products:
+    post:
+      summary: Approve a product for a vendor
+      operationId: approveVendorProduct
+      tags:
+        - Vendor Products
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveVendorProductRequest"
+      responses:
+        "201":
+          description: Product approved for vendor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+        "400":
+          description: Invalid request
+
+    get:
+      summary: List products approved for a vendor
+      operationId: listVendorProducts
+      tags:
+        - Vendor Products
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      responses:
+        "200":
+          description: Vendor products retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorProduct"
+
+  /vendors/{vendorId}/products/{productId}:
+    get:
+      summary: Get an approved vendor product
+      operationId: getVendorProduct
+      tags:
+        - Vendor Products
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Vendor product retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+        "404":
+          description: Vendor product not found
+
+    patch:
+      summary: Update supplier cost
+      operationId: updateSupplierCost
+      tags:
+        - Vendor Products
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplierCostRequest"
+      responses:
+        "200":
+          description: Supplier cost updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+        "400":
+          description: Invalid request
+        "404":
+          description: Vendor product not found
+
+    delete:
+      summary: Remove an approved product from a vendor
+      operationId: revokeVendorProduct
+      tags:
+        - Vendor Products
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "204":
+          description: Vendor product removed successfully
+        "404":
+          description: Vendor product not found
+
+  /vendors/{vendorId}/reliability:
+    post:
+      summary: Record vendor reliability
+      operationId: recordVendorReliability
+      tags:
+        - Vendor Reliability
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReliabilityRecordRequest"
+      responses:
+        "201":
+          description: Reliability record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReliabilityRecord"
+        "400":
+          description: Invalid request
+
+    get:
+      summary: Get vendor reliability history
+      operationId: getVendorReliabilityHistory
+      tags:
+        - Vendor Reliability
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+      responses:
+        "200":
+          description: Vendor reliability history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReliabilityRecord"
+
+  /vendors/{vendorId}/reliability/{reliabilityId}:
+    get:
+      summary: Get a reliability record
+      operationId: getReliabilityRecord
+      tags:
+        - Vendor Reliability
+      parameters:
+        - $ref: "#/components/parameters/VendorId"
+        - $ref: "#/components/parameters/ReliabilityId"
+      responses:
+        "200":
+          description: Reliability record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReliabilityRecord"
+        "404":
+          description: Reliability record not found
+
+components:
+  parameters:
+    VendorId:
+      name: vendorId
+      in: path
+      required: true
+      description: Unique identifier of the vendor
+      schema:
+        type: string
+        format: uuid
+
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: Unique identifier of the product
+      schema:
+        type: string
+        format: uuid
+
+    ReliabilityId:
+      name: reliabilityId
+      in: path
+      required: true
+      description: Unique identifier of the reliability record
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Vendor:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - paymentTerms
+        - leadTimeDays
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Acme Supplies Ltd
+        email:
+          type: string
+          format: email
+          example: sales@acmesupplies.com
+        phone:
+          type: string
+          example: "+254700000000"
+        paymentTerms:
+          type: string
+          example: "Net 30"
+        leadTimeDays:
+          type: integer
+          minimum: 0
+          example: 14
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateVendorRequest:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+        - paymentTerms
+        - leadTimeDays
+      properties:
+        name:
+          type: string
+          minLength: 2
+          example: Acme Supplies Ltd
+        email:
+          type: string
+          format: email
+          example: sales@acmesupplies.com
+        phone:
+          type: string
+          example: "+254700000000"
+        paymentTerms:
+          type: string
+          example: "Net 30"
+        leadTimeDays:
+          type: integer
+          minimum: 0
+          example: 14
+
+    UpdateVendorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        paymentTerms:
+          type: string
+        leadTimeDays:
+          type: integer
+          minimum: 0
+
+    VendorProduct:
+      type: object
+      required:
+        - id
+        - vendorId
+        - productId
+        - supplierCost
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        supplierCost:
+          type: integer
+          minimum: 0
+          description: Supplier cost in the service's configured currency unit.
+          example: 80000
+        createdAt:
+          type: string
+          format: date-time
+
+    ApproveVendorProductRequest:
+      type: object
+      required:
+        - productId
+        - supplierCost
+      properties:
+        productId:
+          type: string
+          format: uuid
+        supplierCost:
+          type: integer
+          minimum: 0
+          example: 80000
+
+    UpdateSupplierCostRequest:
+      type: object
+      required:
+        - supplierCost
+      properties:
+        supplierCost:
+          type: integer
+          minimum: 0
+          example: 85000
+
+    ReliabilityRecord:
+      type: object
+      required:
+        - id
+        - vendorId
+        - expectedDeliveryDate
+        - expectedQuantity
+        - receivedQuantity
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        purchaseOrderId:
+          type: string
+          format: uuid
+          nullable: true
+        expectedDeliveryDate:
+          type: string
+          format: date-time
+        actualDeliveryDate:
+          type: string
+          format: date-time
+          nullable: true
+        expectedQuantity:
+          type: integer
+          minimum: 1
+        receivedQuantity:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - ON_TIME
+            - LATE
+            - SHORT
+            - OVERAGE
+            - DAMAGED
+        notes:
+          type: string
+          nullable: true
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateReliabilityRecordRequest:
+      type: object
+      required:
+        - expectedDeliveryDate
+        - expectedQuantity
+        - receivedQuantity
+        - status
+      properties:
+        purchaseOrderId:
+          type: string
+          format: uuid
+        expectedDeliveryDate:
+          type: string
+          format: date-time
+        actualDeliveryDate:
+          type: string
+          format: date-time
+        expectedQuantity:
+          type: integer
+          minimum: 1
+        receivedQuantity:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - ON_TIME
+            - LATE
+            - SHORT
+            - OVERAGE
+            - DAMAGED
+        notes:
+          type: string
+          maxLength: 500
