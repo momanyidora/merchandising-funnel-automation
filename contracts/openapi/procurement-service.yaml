@@ -1,0 +1,347 @@
+openapi: 3.0.3
+
+info:
+  title: Procurement Service API
+  version: 1.0.0
+  description: API for purchase orders and procurement workflows.
+
+servers:
+  - url: http://localhost:3002
+
+paths:
+  /purchase-orders:
+    post:
+      summary: Create a purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePurchaseOrder"
+      responses:
+        "201":
+          description: Purchase order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+
+    get:
+      summary: List purchase orders
+      responses:
+        "200":
+          description: Purchase orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PurchaseOrder"
+
+  /purchase-orders/{id}:
+    get:
+      summary: Get a purchase order
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      responses:
+        "200":
+          description: Purchase order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "404":
+          description: Purchase order not found
+
+    patch:
+      summary: Update a draft purchase order
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePurchaseOrder"
+      responses:
+        "200":
+          description: Purchase order updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Purchase order cannot be updated
+        "404":
+          description: Purchase order not found
+
+    delete:
+      summary: Delete a draft purchase order
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      responses:
+        "204":
+          description: Purchase order deleted
+        "400":
+          description: Purchase order cannot be deleted
+        "404":
+          description: Purchase order not found
+
+  /purchase-orders/{id}/submit:
+    post:
+      summary: Submit a draft purchase order for approval
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      responses:
+        "200":
+          description: Purchase order submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Purchase order cannot be submitted
+        "404":
+          description: Purchase order not found
+
+  /purchase-orders/{id}/approve:
+    post:
+      summary: Approve a purchase order
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      responses:
+        "200":
+          description: Purchase order approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Purchase order cannot be approved
+        "404":
+          description: Purchase order not found
+
+  /purchase-orders/{purchaseOrderId}/items:
+    post:
+      summary: Add an item to a purchase order
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePurchaseOrderItem"
+      responses:
+        "201":
+          description: Purchase order item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderItem"
+        "400":
+          description: Invalid request
+        "404":
+          description: Purchase order not found
+
+    get:
+      summary: List purchase order items
+      parameters:
+        - $ref: "#/components/parameters/PurchaseOrderId"
+      responses:
+        "200":
+          description: Purchase order items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PurchaseOrderItem"
+        "404":
+          description: Purchase order not found
+  /purchase-orders/items/{id}:
+    get:
+      summary: Get a purchase order item
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: Purchase order item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderItem"
+        "404":
+          description: Purchase order item not found
+
+    patch:
+      summary: Update a purchase order item
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePurchaseOrderItem"
+      responses:
+        "200":
+          description: Purchase order item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderItem"
+        "400":
+          description: Item cannot be updated
+        "404":
+          description: Item not found
+
+    delete:
+      summary: Delete a purchase order item
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204":
+          description: Purchase order item deleted
+        "400":
+          description: Item cannot be deleted
+        "404":
+          description: Item not found
+
+components:
+  parameters:
+    PurchaseOrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ItemId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    PurchaseOrder:
+      type: object
+      required:
+        - id
+        - vendorId
+        - status
+        - paymentTerms
+        - currency
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - PENDING_APPROVAL
+            - APPROVED
+        paymentTerms:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePurchaseOrder:
+      type: object
+      required:
+        - vendorId
+        - paymentTerms
+        - currency
+      properties:
+        vendorId:
+          type: string
+          format: uuid
+        paymentTerms:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+
+    UpdatePurchaseOrder:
+      type: object
+      properties:
+        paymentTerms:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+
+    PurchaseOrderItem:
+      type: object
+      required:
+        - id
+        - purchaseOrderId
+        - productId
+        - quantity
+        - lockedUnitCost
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        purchaseOrderId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        lockedUnitCost:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+
+    CreatePurchaseOrderItem:
+      type: object
+      required:
+        - productId
+        - quantity
+        - lockedUnitCost
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        lockedUnitCost:
+          type: integer
+          minimum: 0
+
+    UpdatePurchaseOrderItem:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+        lockedUnitCost:
+          type: integer
+          minimum: 0
