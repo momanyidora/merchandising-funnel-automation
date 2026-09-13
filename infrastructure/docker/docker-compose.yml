@@ -1,0 +1,38 @@
+services:
+  vendor-postgres:
+    image: postgres:16
+    container_name: mms-vendor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vendor_db
+      POSTGRES_USER: vendor_user
+      POSTGRES_PASSWORD: vendor_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - vendor_postgres_data:/var/lib/postgresql/data
+
+  procurement-postgres:
+    image: postgres:16
+    container_name: mms-procurement-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: procurement_db
+      POSTGRES_USER: procurement_user
+      POSTGRES_PASSWORD: procurement_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - procurement_postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: mms-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  vendor_postgres_data:
+  procurement_postgres_data:

@@ -1,0 +1,26 @@
+{
+  "name": "merchandising-funnel-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Distributed Merchandise Management System",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "^13.0.0"
+  }
+}
