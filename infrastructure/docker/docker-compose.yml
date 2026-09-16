@@ -1,0 +1,16 @@
+services:
+  vendor-postgres:
+    image: postgres:16
+    container_name: mms-vendor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vendor_db
+      POSTGRES_USER: vendor_user
+      POSTGRES_PASSWORD: vendor_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - vendor_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  vendor_postgres_data:
