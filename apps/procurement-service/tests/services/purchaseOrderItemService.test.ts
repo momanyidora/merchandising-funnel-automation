@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-import { createPurchaseOrderItemService } from "../src/services/purchaseOrderItemService.js";
+import { createPurchaseOrderItemService } from "../../src/services/purchaseOrderItemService.js";
 
-import * as itemRepository from "../src/repositories/purchaseOrderItemRepository.js";
-import * as purchaseOrderRepository from "../src/repositories/purchaseOrderRepository.js";
+import * as itemRepository from "../../src/repositories/purchaseOrderItemRepository.js";
+import * as purchaseOrderRepository from "../../src/repositories/purchaseOrderRepository.js";
 
-vi.mock("../src/repositories/purchaseOrderItemRepository.js");
-vi.mock("../src/repositories/purchaseOrderRepository.js");
+vi.mock("../../src/repositories/purchaseOrderItemRepository.js");
+vi.mock("../../src/repositories/purchaseOrderRepository.js");
 
 describe("Purchase Order Item Service", () => {
   beforeEach(() => {

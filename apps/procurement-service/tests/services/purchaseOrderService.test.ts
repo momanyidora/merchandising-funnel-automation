@@ -5,15 +5,15 @@ import {
   submitPurchaseOrderForApprovalService,
   approvePurchaseOrderService,
   updatePurchaseOrderService,
-} from "../src/services/purchaseOrderService.js";
-import * as repository from "../src/repositories/purchaseOrderRepository.js";
-import * as vendorClient from "../src/clients/vendorClient.js";
-import * as eventPublisher from "../src/events/rabbitmqPublisher.js";
+} from "../../src/services/purchaseOrderService.js";
+import * as repository from "../../src/repositories/purchaseOrderRepository.js";
+import * as vendorClient from "../../src/clients/vendorClient.js";
+import * as eventPublisher from "../../src/events/rabbitmqPublisher.js";
 
 
-vi.mock("../src/repositories/purchaseOrderRepository.js");
-vi.mock("../src/clients/vendorClient.js");
-vi.mock("../src/events/rabbitmqPublisher.js");
+vi.mock("../../src/repositories/purchaseOrderRepository.js");
+vi.mock("../../src/clients/vendorClient.js");
+vi.mock("../../src/events/rabbitmqPublisher.js");
 
 
 describe("Purchase Order Service", () => {
