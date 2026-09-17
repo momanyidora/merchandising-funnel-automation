@@ -1,20 +1,11 @@
-import dotenv from "dotenv";
-import path from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import pg from "pg";
+import { env } from "../config/env.js";
 
-dotenv.config({
-  path: path.resolve(process.cwd(), "../../.env"),
-});
-
-const databaseUrl = process.env.INVENTORY_DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("INVENTORY_DATABASE_URL is not set");
-}
+const { Pool } = pg;
 
 const pool = new Pool({
-  connectionString: databaseUrl,
+  connectionString: env.INVENTORY_DATABASE_URL,
 });
 
 export const db = drizzle(pool);
