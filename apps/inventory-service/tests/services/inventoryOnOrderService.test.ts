@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-vi.mock("../src/repositories/inventoryOnOrderRepository.js", () => ({
+vi.mock("../../src/repositories/inventoryOnOrderRepository.js", () => ({
   updateOnOrder: vi.fn(),
 }));
 
-import { updateOnOrder } from "../src/repositories/inventoryOnOrderRepository.js";
-import { changeOnOrder } from "../src/services/inventoryOnOrderService.js";
+import { updateOnOrder } from "../../src/repositories/inventoryOnOrderRepository.js";
+import { changeOnOrder } from "../../src/services/inventoryOnOrderService.js";
 
 const mockedUpdateOnOrder = vi.mocked(updateOnOrder);
 

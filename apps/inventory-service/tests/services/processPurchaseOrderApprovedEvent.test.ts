@@ -1,23 +1,23 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-import { processPurchaseOrderApprovedEvent } from "../src/events/processPurchaseOrderApprovedEvent.js";
+import { processPurchaseOrderApprovedEvent } from "../../src/events/processPurchaseOrderApprovedEvent.js";
 
-import { getInventoryItemByProductId } from "../src/repositories/inventoryRepository.js";
-import { changeOnOrder } from "../src/services/inventoryOnOrderService.js";
+import { getInventoryItemByProductId } from "../../src/repositories/inventoryRepository.js";
+import { changeOnOrder } from "../../src/services/inventoryOnOrderService.js";
 import {
   hasProcessedEvent,
   markEventAsProcessed,
-} from "../src/repositories/processedEventRepository.js";
+} from "../../src/repositories/processedEventRepository.js";
 
-vi.mock("../src/repositories/inventoryRepository.js", () => ({
+vi.mock("../../src/repositories/inventoryRepository.js", () => ({
   getInventoryItemByProductId: vi.fn(),
 }));
 
-vi.mock("../src/services/inventoryOnOrderService.js", () => ({
+vi.mock("../../src/services/inventoryOnOrderService.js", () => ({
   changeOnOrder: vi.fn(),
 }));
 
-vi.mock("../src/repositories/processedEventRepository.js", () => ({
+vi.mock("../../src/repositories/processedEventRepository.js", () => ({
   hasProcessedEvent: vi.fn(),
   markEventAsProcessed: vi.fn(),
 }));
