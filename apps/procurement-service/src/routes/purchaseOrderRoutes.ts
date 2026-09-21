@@ -70,8 +70,8 @@ router.post("/:id/approve", async (req: Request, res: Response) => {
   try {
     const purchaseOrder = await approvePurchaseOrderService(
       getParam(req.params.id),
+      req.body.approverId,
     );
-
     res.status(200).json(purchaseOrder);
   } catch (error) {
     const message =

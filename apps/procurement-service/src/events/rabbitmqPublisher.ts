@@ -1,4 +1,5 @@
 import amqp from "amqplib";
+import { randomUUID } from "node:crypto";
 
 const rabbitmqUrl = process.env.RABBITMQ_URL ?? "amqp://localhost:5672";
 
@@ -13,10 +14,16 @@ export async function publishEvent(eventName: string, payload: unknown) {
       durable: true,
     });
 
+    const event = {
+      eventId: randomUUID(),
+      eventType: eventName,
+      ...(payload as object),
+    };
+
     channel.publish(
       exchangeName,
       eventName,
-      Buffer.from(JSON.stringify(payload)),
+      Buffer.from(JSON.stringify(event)),
       {
         persistent: true,
         contentType: "application/json",

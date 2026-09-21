@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   unique,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const purchaseOrders = pgTable("purchase_orders", {
@@ -61,3 +62,30 @@ export const purchaseOrderItems = pgTable(
     ),
   ],
 );
+
+export const purchaseOrderApprovals = pgTable("purchase_order_approvals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+  purchaseOrderId: uuid("purchase_order_id")
+    .notNull()
+    .references(() => purchaseOrders.id, {
+      onDelete: "cascade",
+    }),
+
+  approverId: uuid("approver_id").notNull(),
+
+  approvedAt: timestamp("approved_at", {
+    withTimezone: true,
+  })
+    .defaultNow()
+    .notNull(),
+});
+export const purchaseOrderApprovers = pgTable("purchase_order_approvers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+  userId: uuid("user_id").notNull().unique(),
+
+  role: varchar("role", { length: 50 }).notNull(),
+
+  active: boolean("active").notNull().default(true),
+});
