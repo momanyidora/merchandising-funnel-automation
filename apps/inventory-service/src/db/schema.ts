@@ -19,7 +19,7 @@ export const inventoryItems = pgTable("inventory_items", {
   onOrder: integer("on_order").notNull().default(0),
 
   unitCost: integer("unit_cost").notNull(),
-
+  lowStockThreshold: integer("low_stock_threshold").notNull().default(10),
   createdAt: timestamp("created_at", {
     withTimezone: true,
   })
@@ -86,6 +86,44 @@ export const inventoryMovements = pgTable("inventory_movements", {
     .defaultNow()
     .notNull(),
 });
+export const inventoryLocationStock = pgTable(
+  "inventory_location_stock",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+
+    inventoryItemId: uuid("inventory_item_id")
+      .notNull()
+      .references(() => inventoryItems.id, {
+        onDelete: "cascade",
+      }),
+
+    locationId: uuid("location_id")
+      .notNull()
+      .references(() => inventoryLocations.id, {
+        onDelete: "cascade",
+      }),
+
+    quantity: integer("quantity").notNull().default(0),
+
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique("inventory_item_location_unique").on(
+      table.inventoryItemId,
+      table.locationId,
+    ),
+  ],
+);
 export const processedEvents = pgTable("processed_events", {
   id: uuid("id").defaultRandom().primaryKey(),
 

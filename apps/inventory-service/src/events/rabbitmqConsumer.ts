@@ -1,5 +1,7 @@
 import amqp from "amqplib";
 import { processPurchaseOrderApprovedEvent } from "./processPurchaseOrderApprovedEvent.js";
+import { processGoodsReceivedEvent } from "./processGoodsReceivedEvent.js";
+import { processItemSoldEvent } from "./processItemSoldEvent.js";
 
 const rabbitmqUrl = process.env.RABBITMQ_URL ?? "amqp://localhost:5672";
 
@@ -18,7 +20,23 @@ export async function startInventoryEventConsumer() {
     durable: true,
   });
 
-  await channel.bindQueue(queue.queue, exchangeName, "PurchaseOrderApproved");
+  await channel.bindQueue(
+    queue.queue,
+    exchangeName,
+    "PurchaseOrderApproved",
+  );
+
+  await channel.bindQueue(
+    queue.queue,
+    exchangeName,
+    "GoodsReceived",
+  );
+
+  await channel.bindQueue(
+    queue.queue,
+    exchangeName,
+    "ItemSold",
+  );
 
   await channel.consume(queue.queue, async (message) => {
     if (!message) {
@@ -28,15 +46,32 @@ export async function startInventoryEventConsumer() {
     try {
       const event = JSON.parse(message.content.toString());
 
-      await processPurchaseOrderApprovedEvent(event);
+      switch (event.eventType) {
+        case "PurchaseOrderApproved":
+          await processPurchaseOrderApprovedEvent(event);
+          break;
+
+        case "GoodsReceived":
+          await processGoodsReceivedEvent(event);
+          break;
+
+        case "ItemSold":
+          await processItemSoldEvent(event);
+          break;
+
+        default:
+          console.log(`Ignoring unsupported event: ${event.eventType}`);
+      }
 
       channel.ack(message);
     } catch (error) {
-      console.error("Failed to process PurchaseOrderApproved event", error);
+      console.error("Failed to process inventory event", error);
 
       channel.nack(message, false, true);
     }
   });
 
-  console.log("Inventory event consumer listening for PurchaseOrderApproved");
+  console.log(
+    "Inventory event consumer listening for PurchaseOrderApproved, GoodsReceived and ItemSold",
+  );
 }

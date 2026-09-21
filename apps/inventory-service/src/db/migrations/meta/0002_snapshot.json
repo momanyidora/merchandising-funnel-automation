@@ -1,6 +1,6 @@
 {
-  "id": "1003627c-7851-4b8a-b4ff-547edd2f0ab3",
-  "prevId": "af22b124-9d9e-40fb-b13c-80c1c7ca0124",
+  "id": "2d17c05f-92e6-46d0-8860-be1011faf5d5",
+  "prevId": "1003627c-7851-4b8a-b4ff-547edd2f0ab3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -47,6 +47,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "low_stock_threshold": {
+          "name": "low_stock_threshold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
         },
         "created_at": {
           "name": "created_at",

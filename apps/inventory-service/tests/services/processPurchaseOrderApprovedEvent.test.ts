@@ -42,6 +42,7 @@ describe("processPurchaseOrderApprovedEvent", () => {
       reserved: 0,
       onOrder: 10,
       unitCost: 500,
+      lowStockThreshold: 10,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
