@@ -84,9 +84,9 @@ export default function PurchaseOrdersPage() {
             Phase 1 • Procurement
           </p>
 
-          <h1 className="text-3xl font-bold text-slate-900">Purchase Orders</h1>
+          <h1 className="text-3xl font-bold text-slate-600">Purchase Orders</h1>
 
-          <p className="mt-1 text-slate-600">
+          <p className="mt-1 text-slate-500">
             Create and manage purchase orders.
           </p>
         </div>
@@ -94,7 +94,7 @@ export default function PurchaseOrdersPage() {
         <div className="flex gap-2">
           <button
             onClick={loadOrders}
-            className="flex items-center gap-2 rounded-lg border px-4 py-2"
+            className="flex items-center gap-2 rounded-lg border px-4 py-2 text-slate-600"
           >
             <RefreshCw size={16} />
             Refresh
@@ -121,7 +121,9 @@ export default function PurchaseOrdersPage() {
       {!loading && !error && (
         <section className="rounded-xl border bg-white">
           <div className="border-b p-5">
-            <h2 className="text-xl font-semibold">Purchase Order List</h2>
+            <h2 className="text-xl font-semibold text-slate-600">
+              Purchase Order List
+            </h2>
             <p className="text-sm text-slate-500">
               {orders.length} purchase order
               {orders.length === 1 ? "" : "s"}
@@ -136,7 +138,7 @@ export default function PurchaseOrdersPage() {
                 <Link
                   key={order.id}
                   href={`/purchase-orders/${order.id}`}
-                  className="block p-5 hover:bg-slate-50"
+                  className="block p-5 text-slate-600 hover:bg-slate-50"
                 >
                   <div className="flex items-center justify-between">
                     <div>

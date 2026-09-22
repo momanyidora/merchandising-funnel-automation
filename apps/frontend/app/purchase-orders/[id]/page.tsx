@@ -231,14 +231,14 @@ export default function PurchaseOrderDetailPage() {
             Phase 1 • Procurement
           </p>
 
-          <h1 className="text-3xl font-bold text-slate-900">Purchase Order</h1>
+          <h1 className="text-3xl font-bold text-slate-600">Purchase Order</h1>
 
           <p className="mt-1 text-sm text-slate-500">{order.id}</p>
         </div>
 
         <button
           onClick={loadOrder}
-          className="flex items-center gap-2 rounded-lg border px-4 py-2"
+          className="flex items-center gap-2 rounded-lg border px-4 py-2 text-slate-600"
         >
           <RefreshCw size={16} />
           Refresh
@@ -265,22 +265,22 @@ export default function PurchaseOrderDetailPage() {
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div>
             <p className="text-sm text-slate-500">Vendor ID</p>
-            <p className="font-medium">{order.vendorId}</p>
+            <p className="font-medium text-slate-600">{order.vendorId}</p>
           </div>
 
           <div>
             <p className="text-sm text-slate-500">Payment Terms</p>
-            <p className="font-medium">{order.paymentTerms}</p>
+            <p className="font-medium text-slate-600">{order.paymentTerms}</p>
           </div>
 
           <div>
             <p className="text-sm text-slate-500">Currency</p>
-            <p className="font-medium">{order.currency}</p>
+            <p className="font-medium text-slate-600">{order.currency}</p>
           </div>
 
           <div>
             <p className="text-sm text-slate-500">Created</p>
-            <p className="font-medium">
+            <p className="font-medium text-slate-600">
               {new Date(order.createdAt).toLocaleString()}
             </p>
           </div>
@@ -308,7 +308,7 @@ export default function PurchaseOrderDetailPage() {
       </section>
 
       {order.status === "DRAFT" && (
-        <section className="rounded-xl border bg-white p-6">
+        <section className="rounded-xl border bg-white p-6 text-slate-600">
           <div className="mb-5 flex items-center gap-2">
             <Plus size={20} />
             <h2 className="text-xl font-semibold text-slate-600">Add Item</h2>
@@ -356,14 +356,14 @@ export default function PurchaseOrderDetailPage() {
                 value={unitCost}
                 onChange={(event) => setUnitCost(event.target.value)}
                 required
-                className="w-full rounded-lg border px-4 py-3"
+                className="w-full rounded-lg border px-4 py-3 text-slate-600"
               />
             </div>
 
             <button
               type="submit"
               disabled={addingItem}
-              className="rounded-lg bg-blue-600 px-4 py-3 text-white disabled:opacity-50 md:col-span-3"
+              className="rounded-lg bg-blue-600 px-4 py-3  text-slate-600 disabled:opacity-50 md:col-span-3"
             >
               {addingItem ? "Adding..." : "Add Item"}
             </button>

@@ -66,7 +66,7 @@ export default function NewPurchaseOrderPage() {
         className="space-y-5 rounded-xl border bg-white p-6"
       >
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-900">
+          <label className="mb-2 block text-sm font-medium text-slate-600">
             Vendor ID
           </label>
 
@@ -83,7 +83,6 @@ export default function NewPurchaseOrderPage() {
           <label className="mb-2 block text-sm font-medium text-slate-900">
             Payment Terms
           </label>
-
         </div>
 
         <div>
@@ -111,7 +110,7 @@ export default function NewPurchaseOrderPage() {
           <button
             type="button"
             onClick={() => router.push("/purchase-orders")}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 hover:bg-slate-100"
+            className="rounded-lg border border-blue-300 px-4 py-2 text-slate-900 hover:bg-slate-100"
           >
             Cancel
           </button>
@@ -119,7 +118,7 @@ export default function NewPurchaseOrderPage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white disabled:opacity-50 text-slate-600"
           >
             {loading ? "Creating..." : "Create Purchase Order"}
           </button>
