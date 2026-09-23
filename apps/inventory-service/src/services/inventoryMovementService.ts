@@ -1,4 +1,8 @@
 import { applyInventoryMovement } from "../repositories/inventoryMovementRepository.js";
+import {
+  InventoryItemNotFoundError,
+  InvalidMovementQuantityError,
+} from "../errors/inventoryErrors.js";
 
 export async function recordInventoryMovement(data: {
   inventoryItemId: string;
@@ -8,13 +12,12 @@ export async function recordInventoryMovement(data: {
   reason?: string;
 }) {
   if (data.quantity === 0) {
-    throw new Error("Movement quantity cannot be zero");
+    throw new InvalidMovementQuantityError();
   }
-
   const result = await applyInventoryMovement(data);
 
   if (!result) {
-    throw new Error("Inventory item not found");
+    throw new InventoryItemNotFoundError();
   }
 
   return result;

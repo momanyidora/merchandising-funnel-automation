@@ -6,6 +6,11 @@ import {
   inventoryLocationStock,
   inventoryMovements,
 } from "../db/schema.js";
+import {
+  InventoryLocationNotFoundError,
+  InsufficientLocationInventoryError,
+  InsufficientInventoryError,
+} from "../errors/inventoryErrors.js";
 
 export async function applyInventoryMovement(data: {
   inventoryItemId: string;
@@ -28,9 +33,8 @@ export async function applyInventoryMovement(data: {
       .select()
       .from(inventoryLocations)
       .where(eq(inventoryLocations.id, data.locationId));
-
     if (!location) {
-      throw new Error("Inventory location not found");
+      throw new InventoryLocationNotFoundError();
     }
 
     const [locationStock] = await tx
@@ -45,15 +49,14 @@ export async function applyInventoryMovement(data: {
 
     const currentLocationQuantity = locationStock?.quantity ?? 0;
     const newLocationQuantity = currentLocationQuantity + data.quantity;
-
-    if (newLocationQuantity < 0) {
-      throw new Error("Insufficient inventory at this location");
+    if (newLocationQuantity < 1) {
+      throw new InsufficientLocationInventoryError();
     }
 
     const newOnHand = item.onHand + data.quantity;
 
     if (newOnHand < 0) {
-      throw new Error("Insufficient inventory");
+      throw new InsufficientInventoryError();
     }
 
     const [updatedItem] = await tx
