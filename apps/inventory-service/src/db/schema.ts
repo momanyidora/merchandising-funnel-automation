@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   unique,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const inventoryItems = pgTable("inventory_items", {
@@ -138,4 +139,32 @@ export const processedEvents = pgTable("processed_events", {
   })
     .defaultNow()
     .notNull(),
+});
+
+export const eventAuditLogs = pgTable("event_audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+  eventId: varchar("event_id", {
+    length: 100,
+  }).notNull(),
+
+  eventType: varchar("event_type", {
+    length: 100,
+  }).notNull(),
+
+  status: varchar("status", {
+    length: 50,
+  }).notNull(),
+
+  payload: jsonb("payload").notNull(),
+
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  })
+    .defaultNow()
+    .notNull(),
+
+  processedAt: timestamp("processed_at", {
+    withTimezone: true,
+  }),
 });
