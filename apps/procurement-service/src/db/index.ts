@@ -1,21 +1,11 @@
-import dotenv from "dotenv";
-import path from "node:path";
-
-dotenv.config({
-  path: path.resolve(process.cwd(), "../../.env"),
-});
-
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import pg from "pg";
+import { env } from "../config/env.js";
 
-const databaseUrl = process.env.PROCUREMENT_DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("PROCUREMENT_DATABASE_URL is not set");
-}
+const { Pool } = pg;
 
 try {
-  const url = new URL(databaseUrl);
+  const url = new URL(env.PROCUREMENT_DATABASE_URL);
 
   if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
     throw new Error("Invalid database URL protocol");
@@ -25,7 +15,7 @@ try {
 }
 
 const pool = new Pool({
-  connectionString: databaseUrl,
+  connectionString: env.PROCUREMENT_DATABASE_URL,
 });
 
 export const db = drizzle(pool);

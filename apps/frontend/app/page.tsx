@@ -14,7 +14,7 @@ const modules = [
     href: "/purchase-orders",
     icon: ClipboardList,
   },
-  
+
   {
     name: "Inventory",
     description: "Track stock, reservations, movements and valuation.",

@@ -5,20 +5,20 @@ import {
   submitPurchaseOrderForApprovalService,
   approvePurchaseOrderService,
   updatePurchaseOrderService,
-} from "../src/services/purchaseOrderService.js";
-import * as approverRepository from "../src/repositories/purchaseOrderApproverRepository.js";
-import * as itemRepository from "../src/repositories/purchaseOrderItemRepository.js";
-import * as repository from "../src/repositories/purchaseOrderRepository.js";
-import * as approvalRepository from "../src/repositories/purchaseOrderApprovalRepository.js";
-import * as vendorClient from "../src/clients/vendorClient.js";
-import * as eventPublisher from "../src/events/rabbitmqPublisher.js";
+} from "../../src/services/purchaseOrderService.js";
+import * as approverRepository from "../../src/repositories/purchaseOrderApproverRepository.js";
+import * as itemRepository from "../../src/repositories/purchaseOrderItemRepository.js";
+import * as repository from "../../src/repositories/purchaseOrderRepository.js";
+import * as approvalRepository from "../../src/repositories/purchaseOrderApprovalRepository.js";
+import * as vendorClient from "../../src/clients/vendorClient.js";
+import * as eventPublisher from "../../src/events/rabbitmqPublisher.js";
 
-vi.mock("../src/repositories/purchaseOrderRepository.js");
-vi.mock("../src/repositories/purchaseOrderItemRepository.js");
-vi.mock("../src/repositories/purchaseOrderApprovalRepository.js");
-vi.mock("../src/clients/vendorClient.js");
-vi.mock("../src/events/rabbitmqPublisher.js");
-vi.mock("../src/repositories/purchaseOrderApproverRepository.js");
+vi.mock("../../src/repositories/purchaseOrderRepository.js");
+vi.mock("../../src/repositories/purchaseOrderItemRepository.js");
+vi.mock("../../src/repositories/purchaseOrderApprovalRepository.js");
+vi.mock("../../src/clients/vendorClient.js");
+vi.mock("../../src/events/rabbitmqPublisher.js");
+vi.mock("../../src/repositories/purchaseOrderApproverRepository.js");
 
 describe("Purchase Order Service", () => {
   beforeEach(() => {

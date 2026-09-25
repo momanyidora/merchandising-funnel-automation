@@ -195,7 +195,7 @@ describe("Vendor Management", () => {
         }),
       ).rejects.toThrow("Vendor ID must be a valid UUID");
     });
-    
+
     it("should reject an invalid product UUID", async () => {
       await expect(
         approveVendorProduct({
