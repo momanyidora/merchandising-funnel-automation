@@ -1,11 +1,19 @@
 import amqp from "amqplib";
 import { randomUUID } from "node:crypto";
+import { appendFile } from "node:fs/promises";
 
 const rabbitmqUrl = process.env.RABBITMQ_URL ?? "amqp://localhost:5672";
 
 const exchangeName = "mms.events";
+const auditLogFile = "mq_audit.log";
+
+async function writeAuditLog(message: string) {
+  await appendFile(auditLogFile, `${message}\n`);
+}
 
 export async function publishEvent(eventName: string, payload: unknown) {
+  const timestamp = new Date().toISOString();
+
   try {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
@@ -30,9 +38,18 @@ export async function publishEvent(eventName: string, payload: unknown) {
       },
     );
 
+    await writeAuditLog(
+      `[${timestamp}] SUCCESS eventName=${eventName} exchangeName=${exchangeName}`,
+    );
+
     await channel.close();
     await connection.close();
   } catch (error) {
+    await writeAuditLog(
+      `[${timestamp}] FAILED eventName=${eventName} exchangeName=${exchangeName} error=${String(error)}`,
+    );
+
     console.error(`Failed to publish event: ${eventName}`, error);
   }
 }
+1
