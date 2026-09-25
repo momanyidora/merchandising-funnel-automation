@@ -14,6 +14,16 @@ if (!databaseUrl) {
   throw new Error("PROCUREMENT_DATABASE_URL is not set");
 }
 
+try {
+  const url = new URL(databaseUrl);
+
+  if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
+    throw new Error("Invalid database URL protocol");
+  }
+} catch {
+  throw new Error("PROCUREMENT_DATABASE_URL is invalid");
+}
+
 const pool = new Pool({
   connectionString: databaseUrl,
 });
