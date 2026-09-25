@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "test": "npm run test --workspace=@mms/vendor-service --workspace=@mms/procurement-service --workspace=@mms/inventory-service",
+    "lint": "npm run lint --workspace=frontend --workspace=@mms/inventory-service --workspace=@mms/procurement-service --workspace=@mms/vendor-service"
   },
   "keywords": [],
   "author": "",
