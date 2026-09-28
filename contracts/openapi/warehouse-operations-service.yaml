@@ -1,0 +1,14 @@
+openapi: 3.0.3
+info: {title: Warehouse Operations Service, version: 1.0.0}
+servers: [{url: http://localhost:3005}]
+paths:
+  /warehouse/locations:
+    get: {summary: List bins and zones, responses: {'200': {description: Locations}}}
+    post: {summary: Create storage location, responses: {'201': {description: Created}}}
+  /warehouse/tasks:
+    get: {summary: List warehouse work, responses: {'200': {description: Tasks}}}
+    post: {summary: Create putaway, pick, or transfer task, responses: {'201': {description: Created}}}
+  /warehouse/tasks/{id}/complete:
+    patch: {summary: Complete task, parameters: [{in: path, name: id, required: true, schema: {type: string, format: uuid}}], responses: {'200': {description: Completed}, '409': {description: Task is not open}}}
+  /warehouse/utilization:
+    get: {summary: Get pending putaway and capacity, responses: {'200': {description: Utilization}}}

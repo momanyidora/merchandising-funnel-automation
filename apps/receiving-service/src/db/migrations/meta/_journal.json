@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790121959217,
+      "tag": "0000_puzzling_johnny_blaze",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790250000002,
+      "tag": "0002_event_outbox",
+      "breakpoints": true
+    }
+  ]
+}
