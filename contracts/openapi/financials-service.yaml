@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info: {title: Financials Service, version: 1.0.0}
+servers: [{url: http://localhost:3008}]
+paths:
+  /financials/ledger:
+    get: {summary: Read general ledger entries, responses: {'200': {description: Ledger entries}}}
+  /financials/payables:
+    get: {summary: Read open accounts payable, responses: {'200': {description: Supplier balances}}}
+  /financials/profitability:
+    get: {summary: Read account totals, responses: {'200': {description: Debits and credits by account}}}
