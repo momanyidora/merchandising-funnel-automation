@@ -1,0 +1,7 @@
+create extension if not exists pgcrypto;
+create table if not exists audit_events(event_id varchar(100) primary key,event_type varchar(100) not null,payload jsonb not null,processed_at timestamptz not null default now());
+create table if not exists audit_sales(id uuid primary key default gen_random_uuid(),event_id varchar(100) not null,store_name varchar(120) not null,register_name varchar(120) not null,cashier_name varchar(120) not null,business_date date not null,currency varchar(3) not null default 'KES',tender_method varchar(20) not null,amount integer not null,unique(event_id,tender_method,currency));
+create table if not exists register_audits(id uuid primary key default gen_random_uuid(),store_name varchar(120) not null,register_name varchar(120) not null,cashier_name varchar(120) not null,business_date date not null,currency varchar(3) not null default 'KES',expected_total integer not null,actual_total integer not null,variance integer not null,counts jsonb not null,manager_name varchar(120) not null,explanation text not null,status varchar(20) not null,created_at timestamptz not null default now());
+
+create table if not exists event_outbox(event_id uuid primary key,event_type varchar(100) not null,payload jsonb not null,attempts integer not null default 0,last_error varchar(1000),next_attempt_at timestamptz not null default now(),created_at timestamptz not null default now(),published_at timestamptz);
+create index if not exists event_outbox_pending_idx on event_outbox(next_attempt_at,created_at) where published_at is null;
