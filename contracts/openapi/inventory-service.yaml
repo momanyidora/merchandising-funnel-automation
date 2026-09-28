@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info: {title: Inventory Service, version: 1.0.0}
+servers: [{url: http://localhost:3003}]
+paths:
+  /inventory/products:
+    get:
+      summary: Search named products
+      parameters:
+        - {in: query, name: search, schema: {type: string}}
+        - {in: query, name: ids, schema: {type: string, description: Comma-separated product identifiers for service clients}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses: {'200': {description: Product names and stock attributes}}
+  /inventory:
+    post:
+      summary: Create a named product inventory record
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [productName, unitCost], properties: {productName: {type: string, minLength: 2}, unitCost: {type: integer, minimum: 0}, productId: {type: string, format: uuid}}}}}}
+      responses: {'201': {description: Product created}, '400': {description: Invalid product}}
+  /inventory/locations/{locationId}/stock:
+    get:
+      summary: Get named product stock in a location
+      parameters: [{in: path, name: locationId, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: Location stock list}}
+  /inventory/movements:
+    post:
+      summary: Record idempotent inventory movement
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [inventoryItemId, locationId, type, quantity], properties: {inventoryItemId: {type: string, format: uuid}, locationId: {type: string, format: uuid}, type: {type: string}, quantity: {type: integer}, idempotencyKey: {type: string}}}}}}
+      responses: {'201': {description: Movement recorded}, '409': {description: Insufficient stock}}
+
+  /inventory/movements/transfer:
+    post:
+      summary: Atomically transfer stock between Inventory locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [inventoryItemId, sourceLocationId, destinationLocationId, quantity, idempotencyKey]
+              properties:
+                inventoryItemId: {type: string, format: uuid}
+                sourceLocationId: {type: string, format: uuid}
+                destinationLocationId: {type: string, format: uuid}
+                quantity: {type: integer, minimum: 1}
+                idempotencyKey: {type: string}
+      responses: {'200': {description: Transfer applied or replayed idempotently}, '409': {description: Insufficient source stock}}
+  /inventory/stock/{inventoryItemId}:
+    get:
+      summary: Get stock by Inventory item across named locations
+      parameters: [{in: path, name: inventoryItemId, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: Stock per location}}

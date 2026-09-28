@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   createLocation,
   getLocationById,
+  getLocations,
 } from "../services/inventoryLocationService.js";
 
 export async function createLocationController(req: Request, res: Response) {
@@ -41,6 +42,18 @@ export async function getLocationController(
   } catch {
     return res.status(500).json({
       error: "Failed to retrieve inventory location",
+    });
+  }
+}
+
+export async function getLocationsController(_req: Request, res: Response) {
+  try {
+    const locations = await getLocations();
+
+    return res.status(200).json(locations);
+  } catch {
+    return res.status(500).json({
+      error: "Failed to retrieve inventory locations",
     });
   }
 }

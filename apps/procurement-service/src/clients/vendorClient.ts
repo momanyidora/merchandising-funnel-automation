@@ -16,7 +16,7 @@ export async function getVendorById(vendorId: string) {
 
 export async function getVendorProduct(vendorId: string, productId: string) {
   const response = await fetch(
-    `${vendorServiceUrl}/vendors/${vendorId}/products/${productId}`,
+    `${env.VENDOR_SERVICE_URL}/vendors/${vendorId}/products/${productId}`,
   );
 
   if (response.status === 404) {

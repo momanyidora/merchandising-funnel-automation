@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams} from "next/navigation";
-import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
+import { useParams } from "next/navigation";
+import ProductPicker from "../../components/ProductPicker";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleDollarSign,
+  Package,
+  Plus,
+  RefreshCw,
+  Send,
+} from "lucide-react";
 
 type PurchaseOrder = {
   id: string;
@@ -15,6 +24,13 @@ type PurchaseOrder = {
   updatedAt: string;
 };
 
+type VendorProduct = {
+  id: string;
+  vendorId: string;
+  productId: string;
+  supplierCost: number;
+};
+
 type PurchaseOrderItem = {
   id: string;
   purchaseOrderId: string;
@@ -24,21 +40,51 @@ type PurchaseOrderItem = {
   createdAt: string;
 };
 
+function formatStatus(status: string) {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getStatusClasses(status: string) {
+  switch (status) {
+    case "DRAFT":
+      return "bg-slate-100 text-slate-700";
+    case "PENDING_APPROVAL":
+      return "bg-amber-50 text-amber-700";
+    case "APPROVED":
+      return "bg-emerald-50 text-emerald-700";
+    case "REJECTED":
+      return "bg-red-50 text-red-700";
+    case "CANCELLED":
+      return "bg-slate-100 text-slate-500";
+    default:
+      return "bg-slate-100 text-slate-700";
+  }
+}
+
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
-
 
   const id = params.id as string;
 
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [items, setItems] = useState<PurchaseOrderItem[]>([]);
+  const [vendorName, setVendorName] = useState("");
+  const [productNames, setProductNames] = useState<Record<string,string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unitCost, setUnitCost] = useState("");
+  const [vendorProducts, setVendorProducts] = useState<VendorProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [addingItem, setAddingItem] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   async function loadOrder() {
     try {
@@ -59,6 +105,12 @@ export default function PurchaseOrderDetailPage() {
 
       setOrder(orderData);
       setItems(itemsData);
+      const [vendorResponse, catalogResponse] = await Promise.all([
+        fetch(`/api/vendor/vendors/${orderData.vendorId}`),
+        fetch(`/api/inventory/products?ids=${encodeURIComponent(itemsData.map(item=>item.productId).join(","))}`),
+      ]);
+      if (vendorResponse.ok) setVendorName((await vendorResponse.json()).name);
+      if (catalogResponse.ok) { const rows = await catalogResponse.json(); setProductNames(Object.fromEntries(rows.map((p: {productId:string;productName:string})=>[p.productId,p.productName]))); }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load purchase order",
@@ -88,6 +140,12 @@ export default function PurchaseOrderDetailPage() {
         if (!cancelled) {
           setOrder(orderData);
           setItems(itemsData);
+          const [vendorResponse, catalogResponse] = await Promise.all([
+            fetch(`/api/vendor/vendors/${orderData.vendorId}`),
+            fetch(`/api/inventory/products?ids=${encodeURIComponent(itemsData.map(item=>item.productId).join(","))}`),
+          ]);
+          if (vendorResponse.ok) setVendorName((await vendorResponse.json()).name);
+          if (catalogResponse.ok) { const rows = await catalogResponse.json(); setProductNames(Object.fromEntries(rows.map((p: {productId:string;productName:string})=>[p.productId,p.productName]))); }
           setLoading(false);
         }
       } catch (err) {
@@ -109,6 +167,44 @@ export default function PurchaseOrderDetailPage() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!order?.vendorId) {
+      return;
+    }
+
+    const vendorId = order.vendorId;
+
+    async function loadVendorProducts() {
+      try {
+        setLoadingProducts(true);
+
+        const response = await fetch(
+          `/api/vendor/vendors/${vendorId}/products`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load vendor products");
+        }
+
+        const data = (await response.json()) as VendorProduct[];
+
+        setVendorProducts(data);
+        if (data.length) {
+          const catalogResponse = await fetch(`/api/inventory/products?ids=${encodeURIComponent(data.map((p: VendorProduct) => p.productId).join(","))}`);
+          if (catalogResponse.ok) { const rows = await catalogResponse.json(); setProductNames(current=>({...current,...Object.fromEntries(rows.map((p: {productId:string;productName:string})=>[p.productId,p.productName]))})); }
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load vendor products",
+        );
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+
+    loadVendorProducts();
+  }, [order?.vendorId]);
+
   async function handleAddItem(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -126,13 +222,17 @@ export default function PurchaseOrderDetailPage() {
           body: JSON.stringify({
             productId,
             quantity: Number(quantity),
-            lockedUnitCost: Number(unitCost),
           }),
         },
       );
+      const data = await response.json().catch(() => null);
+
+      console.log("ADD ITEM RESPONSE:", response.status, data);
 
       if (!response.ok) {
-        throw new Error("Failed to add purchase order item");
+        throw new Error(
+          data?.error ?? data?.message ?? "Failed to add purchase order item",
+        );
       }
 
       setProductId("");
@@ -153,6 +253,7 @@ export default function PurchaseOrderDetailPage() {
 
   async function handleSubmitForApproval() {
     try {
+      setSubmitting(true);
       setError("");
 
       const response = await fetch(
@@ -171,11 +272,14 @@ export default function PurchaseOrderDetailPage() {
       setError(
         err instanceof Error ? err.message : "Failed to submit purchase order",
       );
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleApprove() {
     try {
+      setApproving(true);
       setError("");
 
       const response = await fetch(
@@ -200,214 +304,437 @@ export default function PurchaseOrderDetailPage() {
       setError(
         err instanceof Error ? err.message : "Failed to approve purchase order",
       );
+    } finally {
+      setApproving(false);
     }
   }
 
   if (loading) {
-    return <main>Loading purchase order...</main>;
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900">
+        <main className="flex min-h-screen items-center justify-center">
+          <div className="flex items-center gap-3 text-sm text-slate-500">
+            <RefreshCw size={18} className="animate-spin" />
+            Loading purchase order...
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!order) {
     return (
-      <main>
-        <p className="text-red-600">Purchase order not found.</p>
-      </main>
+      <div className="min-h-screen bg-slate-50">
+        <main className="mx-auto max-w-3xl px-6 py-16">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <p className="font-semibold text-red-800">
+              Purchase order not found.
+            </p>
+
+            <Link
+              href="/purchase-orders"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-red-700 hover:underline"
+            >
+              <ArrowLeft size={16} />
+              Back to Purchase Orders
+            </Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
+  const orderTotal = items.reduce(
+    (total, item) => total + item.quantity * item.lockedUnitCost,
+    0,
+  );
+
   return (
-    <main className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link
-            href="/purchase-orders"
-            className="mb-3 inline-flex items-center gap-2 text-sm text-blue-600"
-          >
-            <ArrowLeft size={16} />
-            Back to Purchase Orders
-          </Link>
-
-          <p className="text-sm font-medium text-blue-600">
-            Phase 1 • Procurement
-          </p>
-
-          <h1 className="text-3xl font-bold text-slate-600">Purchase Order</h1>
-
-          <p className="mt-1 text-sm text-slate-500">{order.id}</p>
-        </div>
-
-        <button
-          onClick={loadOrder}
-          className="flex items-center gap-2 rounded-lg border px-4 py-2 text-slate-600"
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
-
-      {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
-          {error}
-        </p>
-      )}
-
-      <section className="rounded-xl border bg-white p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-600">
-            Order Details
-          </h2>
-
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium">
-            {order.status}
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div>
-            <p className="text-sm text-slate-500">Vendor ID</p>
-            <p className="font-medium text-slate-600">{order.vendorId}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-500">Payment Terms</p>
-            <p className="font-medium text-slate-600">{order.paymentTerms}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-500">Currency</p>
-            <p className="font-medium text-slate-600">{order.currency}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-500">Created</p>
-            <p className="font-medium text-slate-600">
-              {new Date(order.createdAt).toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex gap-3">
-          {order.status === "DRAFT" && (
-            <button
-              onClick={handleSubmitForApproval}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white"
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <main className="min-h-screen lg:ml-64">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <Link
+              href="/purchase-orders"
+              className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-600"
             >
-              Submit for Approval
-            </button>
-          )}
+              <ArrowLeft size={16} />
+              Back to Purchase Orders
+            </Link>
 
-          {order.status === "PENDING_APPROVAL" && (
-            <button
-              onClick={handleApprove}
-              className="rounded-lg bg-green-600 px-4 py-2 text-white"
-            >
-              Approve Purchase Order
-            </button>
-          )}
-        </div>
-      </section>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-600">
+                  <Package size={16} />
+                  Procurement
+                </div>
 
-      {order.status === "DRAFT" && (
-        <section className="rounded-xl border bg-white p-6 text-slate-600">
-          <div className="mb-5 flex items-center gap-2">
-            <Plus size={20} />
-            <h2 className="text-xl font-semibold text-slate-600">Add Item</h2>
-          </div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                  Purchase Order
+                </h1>
 
-          <form onSubmit={handleAddItem} className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">
-                Product ID
-              </label>
+                <p className="mt-1 break-all text-sm text-slate-500">
+                  {order.id}
+                </p>
+              </div>
 
-              <input
-                value={productId}
-                onChange={(event) => setProductId(event.target.value)}
-                placeholder="Product UUID"
-                required
-                className="w-full rounded-lg border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">
-                Quantity
-              </label>
-
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
-                required
-                className="w-full rounded-lg border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">
-                Unit Cost
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={unitCost}
-                onChange={(event) => setUnitCost(event.target.value)}
-                required
-                className="w-full rounded-lg border px-4 py-3 text-slate-600"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={addingItem}
-              className="rounded-lg bg-blue-600 px-4 py-3  text-slate-600 disabled:opacity-50 md:col-span-3"
-            >
-              {addingItem ? "Adding..." : "Add Item"}
-            </button>
-          </form>
-        </section>
-      )}
-
-      <section className="rounded-xl border bg-white">
-        <div className="border-b p-5">
-          <h2 className="text-xl font-semibold text-slate-600">
-            Purchase Order Items
-          </h2>
-          <p className="text-sm text-slate-500">
-            {items.length} item{items.length === 1 ? "" : "s"}
-          </p>
-        </div>
-
-        {items.length === 0 ? (
-          <p className="p-5 text-slate-500">No items have been added yet.</p>
-        ) : (
-          <div className="divide-y text-slate-500">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-5"
+              <button
+                onClick={loadOrder}
+                disabled={loading}
+                className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {/* Order overview */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-950">
+                      Order Details
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Review the purchase order information and current status.
+                    </p>
+                  </div>
+
+                  <span
+                    className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${getStatusClasses(
+                      order.status,
+                    )}`}
+                  >
+                    {formatStatus(order.status)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-5 p-6 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="font-medium text-slate-500">
-                    Product: {item.productId}
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Vendor
                   </p>
 
-                  <p className="text-sm text-slate-500">
-                    Quantity: {item.quantity}
+                  <p className="mt-1 break-all text-sm font-semibold text-slate-800">
+                    {vendorName || "Loading vendor name…"}
                   </p>
                 </div>
 
-                <p className="font-semibold text-slate-500">
-                  {order.currency} {item.lockedUnitCost.toLocaleString()}
-                </p>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Payment Terms
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                    {order.paymentTerms}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Currency
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                    {order.currency}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Created
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                    {new Date(order.createdAt).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}
+                  </p>
+                </div>
               </div>
-            ))}
+
+              {(order.status === "DRAFT" ||
+                order.status === "PENDING_APPROVAL") && (
+                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
+                  {order.status === "DRAFT" && (
+                    <button
+                      onClick={handleSubmitForApproval}
+                      disabled={submitting || items.length === 0}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <RefreshCw size={16} className="animate-spin" />
+                      ) : (
+                        <Send size={16} />
+                      )}
+
+                      {submitting ? "Submitting..." : "Submit for Approval"}
+                    </button>
+                  )}
+
+                  {order.status === "PENDING_APPROVAL" && (
+                    <button
+                      onClick={handleApprove}
+                      disabled={approving}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {approving ? (
+                        <RefreshCw size={16} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={16} />
+                      )}
+
+                      {approving ? "Approving..." : "Approve Purchase Order"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Add item */}
+            {order.status === "DRAFT" && (
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                      <Plus size={20} />
+                    </div>
+
+                    <div>
+                      <h2 className="font-semibold text-slate-950">Add Item</h2>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        Select a vendor product and specify the quantity.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAddItem} className="p-6">
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <div>
+                      <label
+                        htmlFor="product"
+                        className="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Product
+                      </label>
+
+                      <ProductPicker
+                        value={productId}
+                        allowedIds={vendorProducts.filter(product => !items.some(item => item.productId === product.productId)).map(product => product.productId)}
+                        onChange={(selectedId) => {
+                          setProductId(selectedId);
+                          const selectedProduct = vendorProducts.find(product => product.productId === selectedId);
+                          setUnitCost(selectedProduct ? String(selectedProduct.supplierCost) : "");
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="quantity"
+                        className="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Quantity
+                      </label>
+
+                      <input
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputMode="numeric"
+                        value={quantity}
+                        onChange={(event) => setQuantity(event.target.value)}
+                        required
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="unit-cost"
+                        className="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Unit Cost
+                      </label>
+
+                      <div className="relative">
+                        <CircleDollarSign
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+
+                        <input
+                          id="unit-cost"
+                          type="number"
+                          min="0"
+                          step="1"
+                          inputMode="numeric"
+                          value={unitCost}
+                          readOnly
+                          required
+                          placeholder="Select a product"
+                          className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-600 outline-none"
+                        />
+                      </div>
+
+                      <p className="mt-1.5 text-xs text-slate-500">
+                        Supplier cost is loaded automatically.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={
+                        addingItem || loadingProducts || !productId || !quantity
+                      }
+                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {addingItem ? (
+                        <RefreshCw size={16} className="animate-spin" />
+                      ) : (
+                        <Plus size={16} />
+                      )}
+
+                      {addingItem ? "Adding..." : "Add Item"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+
+            {/* Items */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">
+                    Purchase Order Items
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {items.length} item{items.length === 1 ? "" : "s"} in this
+                    order
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-slate-50 px-4 py-2 text-right">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Order Total
+                  </p>
+
+                  <p className="text-lg font-bold text-slate-950">
+                    {order.currency} {orderTotal.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {items.length === 0 ? (
+                <div className="px-6 py-12 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                    <Package size={22} />
+                  </div>
+
+                  <p className="mt-4 font-medium text-slate-700">
+                    No items added yet
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Add products to this purchase order before submitting it for
+                    approval.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                          <th className="px-6 py-3 font-semibold">Product</th>
+                          <th className="px-6 py-3 font-semibold">Quantity</th>
+                          <th className="px-6 py-3 font-semibold">Unit Cost</th>
+                          <th className="px-6 py-3 text-right font-semibold">
+                            Total
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-slate-100">
+                        {items.map((item) => (
+                          <tr key={item.id} className="text-sm">
+                            <td className="px-6 py-4 font-medium text-slate-800">
+                              {productNames[item.productId] ?? "Product name unavailable"}
+                            </td>
+
+                            <td className="px-6 py-4 text-slate-600">
+                              {item.quantity.toLocaleString()}
+                            </td>
+
+                            <td className="px-6 py-4 text-slate-600">
+                              {order.currency}{" "}
+                              {item.lockedUnitCost.toLocaleString()}
+                            </td>
+
+                            <td className="px-6 py-4 text-right font-semibold text-slate-800">
+                              {order.currency}{" "}
+                              {(
+                                item.quantity * item.lockedUnitCost
+                              ).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="divide-y divide-slate-100 md:hidden">
+                    {items.map((item) => (
+                      <div key={item.id} className="space-y-3 p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="font-semibold text-slate-800">
+                            {productNames[item.productId] ?? "Product name unavailable"}
+                          </p>
+
+                          <p className="font-semibold text-slate-900">
+                            {order.currency}{" "}
+                            {(
+                              item.quantity * item.lockedUnitCost
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-5 text-sm text-slate-500">
+                          <span>Qty: {item.quantity.toLocaleString()}</span>
+
+                          <span>
+                            Unit: {order.currency}{" "}
+                            {item.lockedUnitCost.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
           </div>
-        )}
-      </section>
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }

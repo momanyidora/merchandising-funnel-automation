@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { inventoryLocationStock } from "../db/schema.js";
+import { inventoryLocationStock, inventoryItems } from "../db/schema.js";
 
 export async function getLocationStock(
   inventoryItemId: string,
@@ -18,6 +18,13 @@ export async function getLocationStock(
     .limit(1);
 
   return stock ?? null;
+}
+
+export async function getLocationStocks(inventoryItemId: string) {
+  return db
+    .select()
+    .from(inventoryLocationStock)
+    .where(eq(inventoryLocationStock.inventoryItemId, inventoryItemId));
 }
 
 export async function createLocationStock(data: {
@@ -62,4 +69,8 @@ export async function adjustLocationStock(data: {
     .returning();
 
   return stock;
+}
+
+export async function getStocksByLocation(locationId: string) {
+  return db.select({ inventoryItemId: inventoryLocationStock.inventoryItemId, productId: inventoryItems.productId, productName: inventoryItems.productName, quantity: inventoryLocationStock.quantity }).from(inventoryLocationStock).innerJoin(inventoryItems, eq(inventoryItems.id, inventoryLocationStock.inventoryItemId)).where(eq(inventoryLocationStock.locationId, locationId));
 }

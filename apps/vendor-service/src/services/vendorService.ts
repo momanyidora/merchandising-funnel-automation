@@ -6,7 +6,7 @@ import {
   deleteVendor as deleteVendorRepository,
 } from "../repositories/vendorRepository.js";
 import { validateUuid } from "../utils/validation.js";
-
+import { isDuplicateError } from "../utils/databaseErrors.js";
 
 type CreateVendorInput = {
   name: string;
@@ -46,14 +46,22 @@ function validateCreateVendor(data: CreateVendorInput): void {
     throw new Error("Lead time is required");
   }
 
-  if (data.leadTimeDays < 0) {
-    throw new Error("Lead time cannot be negative");
+  if (!Number.isSafeInteger(data.leadTimeDays) || data.leadTimeDays < 0) {
+    throw new Error("Lead time cannot be negative and must be a whole number of days");
   }
 }
 export async function createVendor(data: CreateVendorInput) {
   validateCreateVendor(data);
 
-  return createVendorRepository(data);
+  try {
+    return await createVendorRepository(data);
+  } catch (error) {
+    if (isDuplicateError(error)) {
+      throw new Error("A vendor with this email already exists");
+    }
+
+    throw error;
+  }
 }
 
 export async function findVendorById(id: string) {
@@ -61,8 +69,8 @@ export async function findVendorById(id: string) {
   return getVendorById(id);
 }
 
-export async function listVendors() {
-  return getAllVendors();
+export async function listVendors(options?: { page: number; pageSize: number; search?: string }) {
+  return options ? getAllVendors(options) : getAllVendors();
 }
 
 export async function updateVendor(id: string, data: UpdateVendorInput) {
@@ -86,8 +94,8 @@ export async function updateVendor(id: string, data: UpdateVendorInput) {
     throw new Error("Payment terms cannot be empty");
   }
 
-  if (data.leadTimeDays !== undefined && data.leadTimeDays < 0) {
-    throw new Error("Lead time cannot be negative");
+  if (data.leadTimeDays !== undefined && (!Number.isSafeInteger(data.leadTimeDays) || data.leadTimeDays < 0)) {
+    throw new Error("Lead time cannot be negative and must be a whole number of days");
   }
 
   return updateVendorRepository(id, data);

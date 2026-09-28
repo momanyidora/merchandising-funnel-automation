@@ -89,6 +89,7 @@ describe("Inventory Controllers", () => {
 
     expect(createInventory).toHaveBeenCalledWith({
       productId,
+      productName: "Test product",
       unitCost: 500,
     });
     expect(res.status).toHaveBeenCalledWith(201);
@@ -231,6 +232,7 @@ describe("Inventory Controllers", () => {
       inventoryItemId: inventoryId,
       productId,
       onHand: 10,
+      productName: "Test product",
       unitCost: 500,
       inventoryValue: 5000,
     };

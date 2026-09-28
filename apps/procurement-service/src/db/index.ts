@@ -14,7 +14,7 @@ try {
   throw new Error("PROCUREMENT_DATABASE_URL is invalid");
 }
 
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: env.PROCUREMENT_DATABASE_URL,
 });
 

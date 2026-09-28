@@ -8,6 +8,7 @@ describe("Inventory Movement Repository", () => {
   it("should apply an inventory movement", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 500,
     });
 
@@ -47,6 +48,7 @@ describe("Inventory Movement Repository", () => {
   it("should reject a movement that makes on-hand negative", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 500,
     });
 

@@ -21,6 +21,7 @@ describe("inventory on-order service", () => {
       onHand: 20,
       reserved: 3,
       onOrder: 10,
+      productName: "Test product",
       unitCost: 500,
     };
 
@@ -39,6 +40,7 @@ describe("inventory on-order service", () => {
       onHand: 20,
       reserved: 3,
       onOrder: 5,
+      productName: "Test product",
       unitCost: 500,
     };
 

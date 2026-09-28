@@ -40,6 +40,7 @@ describe("Inventory API Requests", () => {
     const inventory = {
       id: inventoryId,
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 
@@ -47,6 +48,7 @@ describe("Inventory API Requests", () => {
 
     const payload = {
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 
@@ -69,6 +71,7 @@ describe("Inventory API Requests", () => {
     const inventory = {
       id: inventoryId,
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 

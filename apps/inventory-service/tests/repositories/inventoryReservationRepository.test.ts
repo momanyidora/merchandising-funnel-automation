@@ -10,7 +10,8 @@ import {
 async function createItemWithStock() {
   const item = await createInventoryItem({
     productId: crypto.randomUUID(),
-    unitCost: 500,
+    productName: "Test product",
+      unitCost: 500,
   });
 
   const location = await createInventoryLocation({

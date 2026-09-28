@@ -4,15 +4,11 @@ import {
   listPurchaseOrders,
   updatePurchaseOrder,
   deletePurchaseOrder,
+  approvePurchaseOrderAndQueueEvent,
 } from "../repositories/purchaseOrderRepository.js";
 import { getVendorById } from "../clients/vendorClient.js";
-import { publishEvent } from "../events/rabbitmqPublisher.js";
 import { getPurchaseOrderItems } from "../repositories/purchaseOrderItemRepository.js";
-import { createPurchaseOrderApproval } from "../repositories/purchaseOrderApprovalRepository.js";
-import {
-  getPurchaseOrderApproverByUserId,
-} from "../repositories/purchaseOrderApproverRepository.js";
-
+import { getPurchaseOrderApproverByUserId } from "../repositories/purchaseOrderApproverRepository.js";
 
 export async function createPurchaseOrderService(data: {
   vendorId: string;
@@ -95,6 +91,7 @@ export async function deletePurchaseOrderService(id: string) {
 
   return deletePurchaseOrder(id);
 }
+
 export async function submitPurchaseOrderForApprovalService(id: string) {
   const existing = await getPurchaseOrderById(id);
 
@@ -104,6 +101,12 @@ export async function submitPurchaseOrderForApprovalService(id: string) {
 
   if (existing.status !== "DRAFT") {
     throw new Error("Only draft purchase orders can be submitted for approval");
+  }
+
+  const items = await getPurchaseOrderItems(existing.id);
+
+  if (items.length === 0) {
+    throw new Error("Purchase order must contain at least one item");
   }
 
   return updatePurchaseOrder(id, {
@@ -139,19 +142,5 @@ export async function approvePurchaseOrderService(
     throw new Error("Purchase order must contain at least one item");
   }
 
-  const approvedPurchaseOrder = await updatePurchaseOrder(id, {
-    status: "APPROVED",
-  });
-
-  await createPurchaseOrderApproval({
-    purchaseOrderId: id,
-    approverId,
-  });
-
-  await publishEvent("PurchaseOrderApproved", {
-    purchaseOrder: approvedPurchaseOrder,
-    items,
-  });
-
-  return approvedPurchaseOrder;
+  return approvePurchaseOrderAndQueueEvent({ id, approverId, items });
 }
