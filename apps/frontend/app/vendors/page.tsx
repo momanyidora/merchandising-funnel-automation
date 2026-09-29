@@ -124,7 +124,7 @@ export default function VendorsPage() {
         throw new Error(data?.error || "Failed to save vendor");
       }
 
-      const savedVendor = await response.json();
+      await response.json();
 
       if (!isEditing) setPage(1);
       await loadVendors();

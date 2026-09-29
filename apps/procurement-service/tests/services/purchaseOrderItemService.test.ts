@@ -110,7 +110,7 @@ describe("Purchase Order Item Service", () => {
         productId: "product-1",
         quantity: 0,
       }),
-    ).rejects.toThrow("Quantity must be greater than zero");
+    ).rejects.toThrow("Quantity must be a positive whole number");
 
     expect(purchaseOrderRepository.getPurchaseOrderById).not.toHaveBeenCalled();
     expect(vendorClient.getVendorProduct).not.toHaveBeenCalled();
