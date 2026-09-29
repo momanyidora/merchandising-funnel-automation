@@ -81,7 +81,7 @@ describe("Inventory Controllers", () => {
     vi.mocked(createInventory).mockResolvedValue(inventory as never);
 
     const req = {
-      body: { productId, unitCost: 500 },
+      body: { productId, productName: "Test product", unitCost: 500 },
     } as any;
     const res = mockResponse();
 
@@ -89,6 +89,7 @@ describe("Inventory Controllers", () => {
 
     expect(createInventory).toHaveBeenCalledWith({
       productId,
+      productName: "Test product",
       unitCost: 500,
     });
     expect(res.status).toHaveBeenCalledWith(201);
@@ -231,6 +232,7 @@ describe("Inventory Controllers", () => {
       inventoryItemId: inventoryId,
       productId,
       onHand: 10,
+      productName: "Test product",
       unitCost: 500,
       inventoryValue: 5000,
     };

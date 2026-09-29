@@ -40,6 +40,7 @@ describe("Inventory API Requests", () => {
     const inventory = {
       id: inventoryId,
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 
@@ -47,6 +48,7 @@ describe("Inventory API Requests", () => {
 
     const payload = {
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 
@@ -61,7 +63,7 @@ describe("Inventory API Requests", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      error: "productId and unitCost are required",
+      error: "productName and unitCost are required",
     });
   });
 
@@ -69,6 +71,7 @@ describe("Inventory API Requests", () => {
     const inventory = {
       id: inventoryId,
       productId,
+      productName: "Test product",
       unitCost: 500,
     };
 
