@@ -9,8 +9,13 @@ import {
 
 export const inventoryItems = pgTable("inventory_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-
   productId: uuid("product_id").notNull(),
+
+  productName: varchar("product_name", {
+    length: 200,
+  })
+    .notNull()
+    .default("Unnamed product"),
 
   onHand: integer("on_hand").notNull().default(0),
 

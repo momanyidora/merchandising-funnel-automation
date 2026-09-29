@@ -63,7 +63,7 @@ describe("Inventory API Requests", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      error: "productName and unitCost are required",
+      error: "productId, productName and unitCost are required",
     });
   });
 
