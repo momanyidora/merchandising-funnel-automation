@@ -77,7 +77,16 @@ describe("Purchase Order Service", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-
+    vi.mocked(itemRepository.getPurchaseOrderItems).mockResolvedValue([
+      {
+        id: "item-1",
+        purchaseOrderId: "11111111-1111-1111-1111-111111111111",
+        productId: "product-1",
+        quantity: 10,
+        lockedUnitCost: 500,
+        createdAt: new Date(),
+      },
+    ]);
     const result = await submitPurchaseOrderForApprovalService(
       "11111111-1111-1111-111111111111",
     );
@@ -90,16 +99,6 @@ describe("Purchase Order Service", () => {
       id: "11111111-1111-1111-1111-111111111111",
       vendorId: "vendor-1",
       status: "PENDING_APPROVAL",
-      paymentTerms: "NET_30",
-      currency: "KES",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    vi.mocked(repository.updatePurchaseOrder).mockResolvedValue({
-      id: "11111111-1111-1111-1111-111111111111",
-      vendorId: "vendor-1",
-      status: "APPROVED",
       paymentTerms: "NET_30",
       currency: "KES",
       createdAt: new Date(),
@@ -124,15 +123,15 @@ describe("Purchase Order Service", () => {
       role: "APPROVER",
       active: true,
     });
-    vi.mocked(approvalRepository.createPurchaseOrderApproval).mockResolvedValue(
-      {
-        id: "approval-1",
-        purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-        approverId: "approver-1",
-        approvedAt: new Date(),
-      },
-    );
-
+    vi.mocked(repository.approvePurchaseOrderAndQueueEvent).mockResolvedValue({
+      id: "11111111-1111-1111-1111-111111111111",
+      vendorId: "vendor-1",
+      status: "APPROVED",
+      paymentTerms: "NET_30",
+      currency: "KES",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     const result = await approvePurchaseOrderService(
       "11111111-1111-1111-1111-111111111111",
       "approver-1",
@@ -140,12 +139,21 @@ describe("Purchase Order Service", () => {
 
     expect(result.status).toBe("APPROVED");
 
-    expect(approvalRepository.createPurchaseOrderApproval).toHaveBeenCalledWith(
-      {
-        purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-        approverId: "approver-1",
-      },
-    );
+  
+    expect(repository.approvePurchaseOrderAndQueueEvent).toHaveBeenCalledWith({
+      id: "11111111-1111-1111-1111-111111111111",
+      approverId: "approver-1",
+      items: [
+        {
+          id: "item-1",
+          purchaseOrderId: "11111111-1111-1111-1111-111111111111",
+          productId: "product-1",
+          quantity: 10,
+          lockedUnitCost: 500,
+          createdAt: expect.any(Date),
+        },
+      ],
+    });
   });
 
   it("does not allow an approved purchase order to be edited", async () => {
@@ -166,21 +174,11 @@ describe("Purchase Order Service", () => {
     ).rejects.toThrow("Only draft purchase orders can be updated");
   });
 
-  it("publishes PurchaseOrderApproved when a purchase order is approved", async () => {
+  it("queues PurchaseOrderApproved when a purchase order is approved", async () => {
     vi.mocked(repository.getPurchaseOrderById).mockResolvedValue({
       id: "11111111-1111-1111-1111-111111111111",
       vendorId: "vendor-1",
       status: "PENDING_APPROVAL",
-      paymentTerms: "NET_30",
-      currency: "KES",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    vi.mocked(repository.updatePurchaseOrder).mockResolvedValue({
-      id: "11111111-1111-1111-1111-111111111111",
-      vendorId: "vendor-1",
-      status: "APPROVED",
       paymentTerms: "NET_30",
       currency: "KES",
       createdAt: new Date(),
@@ -197,6 +195,7 @@ describe("Purchase Order Service", () => {
         createdAt: new Date(),
       },
     ]);
+
     vi.mocked(
       approverRepository.getPurchaseOrderApproverByUserId,
     ).mockResolvedValue({
@@ -205,53 +204,44 @@ describe("Purchase Order Service", () => {
       role: "APPROVER",
       active: true,
     });
-    vi.mocked(approvalRepository.createPurchaseOrderApproval).mockResolvedValue(
-      {
-        id: "approval-1",
-        purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-        approverId: "approver-1",
-        approvedAt: new Date(),
-      },
-    );
+
+    vi.mocked(repository.approvePurchaseOrderAndQueueEvent).mockResolvedValue({
+      id: "11111111-1111-1111-1111-111111111111",
+      vendorId: "vendor-1",
+      status: "APPROVED",
+      paymentTerms: "NET_30",
+      currency: "KES",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     const result = await approvePurchaseOrderService(
       "11111111-1111-1111-1111-111111111111",
       "approver-1",
     );
 
-    expect(eventPublisher.publishEvent).toHaveBeenCalledWith(
-      "PurchaseOrderApproved",
-      {
-        purchaseOrder: result,
-        items: [
-          {
-            id: "item-1",
-            purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-            productId: "product-1",
-            quantity: 10,
-            lockedUnitCost: 500,
-            createdAt: expect.any(Date),
-          },
-        ],
-      },
-    );
-  });
+    expect(result.status).toBe("APPROVED");
 
-  it("still approves the purchase order when event publishing fails", async () => {
+    expect(repository.approvePurchaseOrderAndQueueEvent).toHaveBeenCalledWith({
+      id: "11111111-1111-1111-1111-111111111111",
+      approverId: "approver-1",
+      items: [
+        {
+          id: "item-1",
+          purchaseOrderId: "11111111-1111-1111-1111-111111111111",
+          productId: "product-1",
+          quantity: 10,
+          lockedUnitCost: 500,
+          createdAt: expect.any(Date),
+        },
+      ],
+    });
+  });
+  it("approves the purchase order and queues the event", async () => {
     vi.mocked(repository.getPurchaseOrderById).mockResolvedValue({
       id: "11111111-1111-1111-1111-111111111111",
       vendorId: "vendor-1",
       status: "PENDING_APPROVAL",
-      paymentTerms: "NET_45",
-      currency: "KES",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    vi.mocked(repository.updatePurchaseOrder).mockResolvedValue({
-      id: "11111111-1111-1111-1111-111111111111",
-      vendorId: "vendor-1",
-      status: "APPROVED",
       paymentTerms: "NET_45",
       currency: "KES",
       createdAt: new Date(),
@@ -269,16 +259,24 @@ describe("Purchase Order Service", () => {
       },
     ]);
 
-    vi.mocked(approvalRepository.createPurchaseOrderApproval).mockResolvedValue(
-      {
-        id: "approval-1",
-        purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-        approverId: "approver-1",
-        approvedAt: new Date(),
-      },
-    );
+    vi.mocked(
+      approverRepository.getPurchaseOrderApproverByUserId,
+    ).mockResolvedValue({
+      id: "approver-record-1",
+      userId: "approver-1",
+      role: "APPROVER",
+      active: true,
+    });
 
-    vi.mocked(eventPublisher.publishEvent).mockResolvedValue(undefined);
+    vi.mocked(repository.approvePurchaseOrderAndQueueEvent).mockResolvedValue({
+      id: "11111111-1111-1111-1111-111111111111",
+      vendorId: "vendor-1",
+      status: "APPROVED",
+      paymentTerms: "NET_45",
+      currency: "KES",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     const result = await approvePurchaseOrderService(
       "11111111-1111-1111-1111-111111111111",
@@ -287,22 +285,20 @@ describe("Purchase Order Service", () => {
 
     expect(result.status).toBe("APPROVED");
 
-    expect(eventPublisher.publishEvent).toHaveBeenCalledWith(
-      "PurchaseOrderApproved",
-      {
-        purchaseOrder: result,
-        items: [
-          {
-            id: "item-1",
-            purchaseOrderId: "11111111-1111-1111-1111-111111111111",
-            productId: "product-1",
-            quantity: 10,
-            lockedUnitCost: 500,
-            createdAt: expect.any(Date),
-          },
-        ],
-      },
-    );
+    expect(repository.approvePurchaseOrderAndQueueEvent).toHaveBeenCalledWith({
+      id: "11111111-1111-1111-1111-111111111111",
+      approverId: "approver-1",
+      items: [
+        {
+          id: "item-1",
+          purchaseOrderId: "11111111-1111-1111-1111-111111111111",
+          productId: "product-1",
+          quantity: 10,
+          lockedUnitCost: 500,
+          createdAt: expect.any(Date),
+        },
+      ],
+    });
   });
 
   it("rejects purchase order creation when vendor does not exist", async () => {

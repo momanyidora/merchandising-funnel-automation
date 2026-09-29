@@ -81,7 +81,7 @@ describe("Inventory Controllers", () => {
     vi.mocked(createInventory).mockResolvedValue(inventory as never);
 
     const req = {
-      body: { productId, unitCost: 500 },
+      body: { productId, productName: "Test product", unitCost: 500 },
     } as any;
     const res = mockResponse();
 
