@@ -17,7 +17,6 @@ export async function createInventory(data: {
 
   return createInventoryItem(data);
 }
-
 export async function getInventoryById(id: string) {
   return getInventoryItemById(id);
 }

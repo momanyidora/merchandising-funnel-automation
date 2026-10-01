@@ -7,12 +7,12 @@ import {
 } from "../repositories/purchaseOrderItemRepository.js";
 
 import { getPurchaseOrderById } from "../repositories/purchaseOrderRepository.js";
+import { getVendorProduct } from "../clients/vendorClient.js";
 
 export async function createPurchaseOrderItemService(data: {
   purchaseOrderId: string;
   productId: string;
   quantity: number;
-  lockedUnitCost: number;
 }) {
   if (!data.purchaseOrderId) {
     throw new Error("Purchase order ID is required");
@@ -26,10 +26,6 @@ export async function createPurchaseOrderItemService(data: {
     throw new Error("Quantity must be greater than zero");
   }
 
-  if (data.lockedUnitCost < 0) {
-    throw new Error("Locked unit cost cannot be negative");
-  }
-
   const purchaseOrder = await getPurchaseOrderById(data.purchaseOrderId);
 
   if (!purchaseOrder) {
@@ -40,7 +36,21 @@ export async function createPurchaseOrderItemService(data: {
     throw new Error("Items can only be added to draft purchase orders");
   }
 
-  return createPurchaseOrderItem(data);
+  const vendorProduct = await getVendorProduct(
+    purchaseOrder.vendorId,
+    data.productId,
+  );
+
+  if (!vendorProduct) {
+    throw new Error("Product is not approved for this vendor");
+  }
+
+  return createPurchaseOrderItem({
+    purchaseOrderId: data.purchaseOrderId,
+    productId: data.productId,
+    quantity: data.quantity,
+    lockedUnitCost: vendorProduct.supplierCost,
+  });
 }
 
 export async function getPurchaseOrderItemsService(purchaseOrderId: string) {
@@ -71,7 +81,6 @@ export async function updatePurchaseOrderItemService(
   id: string,
   data: {
     quantity?: number;
-    lockedUnitCost?: number;
   },
 ) {
   const item = await getPurchaseOrderItemById(id);
@@ -92,10 +101,6 @@ export async function updatePurchaseOrderItemService(
 
   if (data.quantity !== undefined && data.quantity <= 0) {
     throw new Error("Quantity must be greater than zero");
-  }
-
-  if (data.lockedUnitCost !== undefined && data.lockedUnitCost < 0) {
-    throw new Error("Locked unit cost cannot be negative");
   }
 
   return updatePurchaseOrderItem(id, data);

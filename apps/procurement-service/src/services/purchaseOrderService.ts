@@ -7,36 +7,42 @@ import {
 } from "../repositories/purchaseOrderRepository.js";
 import { getVendorById } from "../clients/vendorClient.js";
 import { publishEvent } from "../events/rabbitmqPublisher.js";
+import { getPurchaseOrderItems } from "../repositories/purchaseOrderItemRepository.js";
+import { createPurchaseOrderApproval } from "../repositories/purchaseOrderApprovalRepository.js";
+import {
+  getPurchaseOrderApproverByUserId,
+} from "../repositories/purchaseOrderApproverRepository.js";
+
 
 export async function createPurchaseOrderService(data: {
   vendorId: string;
-  paymentTerms: string;
   currency: string;
 }) {
   if (!data.vendorId) {
     throw new Error("Vendor ID is required");
-  }
-  const vendor = await getVendorById(data.vendorId);
-
-  if (!vendor) {
-    throw new Error("Vendor not found");
-  }
-  if (!data.paymentTerms) {
-    throw new Error("Payment terms are required");
   }
 
   if (!data.currency) {
     throw new Error("Currency is required");
   }
 
+  const vendor = await getVendorById(data.vendorId);
+
+  if (!vendor) {
+    throw new Error("Vendor not found");
+  }
+
+  if (!vendor.paymentTerms) {
+    throw new Error("Vendor payment terms are not configured");
+  }
+
   return createPurchaseOrder({
     vendorId: data.vendorId,
     status: "DRAFT",
-    paymentTerms: data.paymentTerms,
+    paymentTerms: vendor.paymentTerms,
     currency: data.currency,
   });
 }
-
 export async function getPurchaseOrderService(id: string) {
   if (!id) {
     throw new Error("Purchase order ID is required");
@@ -104,7 +110,10 @@ export async function submitPurchaseOrderForApprovalService(id: string) {
     status: "PENDING_APPROVAL",
   });
 }
-export async function approvePurchaseOrderService(id: string) {
+export async function approvePurchaseOrderService(
+  id: string,
+  approverId: string,
+) {
   const existing = await getPurchaseOrderById(id);
 
   if (!existing) {
@@ -115,11 +124,34 @@ export async function approvePurchaseOrderService(id: string) {
     throw new Error("Only purchase orders pending approval can be approved");
   }
 
+  if (!approverId) {
+    throw new Error("Approver ID is required");
+  }
+  const approver = await getPurchaseOrderApproverByUserId(approverId);
+
+  if (!approver || !approver.active || approver.role !== "APPROVER") {
+    throw new Error("User is not authorized to approve purchase orders");
+  }
+
+  const items = await getPurchaseOrderItems(id);
+
+  if (items.length === 0) {
+    throw new Error("Purchase order must contain at least one item");
+  }
+
   const approvedPurchaseOrder = await updatePurchaseOrder(id, {
     status: "APPROVED",
   });
 
-  await publishEvent("PurchaseOrderApproved", approvedPurchaseOrder);
+  await createPurchaseOrderApproval({
+    purchaseOrderId: id,
+    approverId,
+  });
+
+  await publishEvent("PurchaseOrderApproved", {
+    purchaseOrder: approvedPurchaseOrder,
+    items,
+  });
 
   return approvedPurchaseOrder;
 }

@@ -1,7 +1,9 @@
-import { eq } from "drizzle-orm";
+import { eq, type InferSelectModel } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { inventoryItems } from "../db/schema.js";
 
+
+type InventoryItem = InferSelectModel<typeof inventoryItems>;
 export async function createInventoryItem(data: {
   productId: string;
   productName: string;

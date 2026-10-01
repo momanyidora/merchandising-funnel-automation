@@ -8,6 +8,27 @@
       "when": 1789212595089,
       "tag": "0000_glossy_squadron_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789944376348,
+      "tag": "0001_worthless_strong_guy",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789947554955,
+      "tag": "0002_tan_dreaming_celestial",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789948240261,
+      "tag": "0003_married_wild_pack",
+      "breakpoints": true
     }
   ]
 }
