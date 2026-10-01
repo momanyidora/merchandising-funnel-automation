@@ -7,6 +7,7 @@ describe("Inventory On-Order Repository", () => {
   it("should increase on-order quantity", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 500,
     });
 
@@ -18,6 +19,7 @@ describe("Inventory On-Order Repository", () => {
   it("should decrease on-order quantity", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 500,
     });
 
@@ -39,6 +41,7 @@ describe("Inventory On-Order Repository", () => {
   it("should reject a negative resulting on-order quantity", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 500,
     });
 

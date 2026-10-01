@@ -12,6 +12,7 @@ describe("Inventory Repository", () => {
 
     const item = await createInventoryItem({
       productId,
+      productName: "Test product",
       unitCost: 500,
     });
 
@@ -23,6 +24,7 @@ describe("Inventory Repository", () => {
   it("should retrieve an inventory item by ID", async () => {
     const item = await createInventoryItem({
       productId: randomUUID(),
+      productName: "Test product",
       unitCost: 700,
     });
 
@@ -37,6 +39,7 @@ describe("Inventory Repository", () => {
 
     const item = await createInventoryItem({
       productId,
+      productName: "Test product",
       unitCost: 900,
     });
 

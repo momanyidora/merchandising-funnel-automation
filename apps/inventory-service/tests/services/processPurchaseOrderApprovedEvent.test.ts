@@ -33,11 +33,13 @@ describe("processPurchaseOrderApprovedEvent", () => {
     vi.mocked(getInventoryItemByProductId).mockResolvedValue({
       id: "inventory-1",
       productId: "product-1",
+      productName: "Test product",
     } as never);
 
     vi.mocked(changeOnOrder).mockResolvedValue({
       id: "inventory-1",
       productId: "product-1",
+      productName: "Test product",
       onHand: 20,
       reserved: 0,
       onOrder: 10,

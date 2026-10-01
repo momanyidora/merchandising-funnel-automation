@@ -6,6 +6,7 @@ import {
 
 export async function createInventory(data: {
   productId: string;
+  productName: string;
   unitCost: number;
 }) {
   const existingItem = await getInventoryItemByProductId(data.productId);

@@ -7,16 +7,17 @@ import {
 
 export async function createInventoryController(req: Request, res: Response) {
   try {
-    const { productId, unitCost } = req.body;
+    const { productId, productName, unitCost } = req.body;
 
     if (!productId || unitCost === undefined) {
       return res.status(400).json({
-        error: "productId and unitCost are required",
+        error: "productId, productName and unitCost are required",
       });
     }
 
     const inventory = await createInventory({
       productId,
+      productName,
       unitCost,
     });
 
