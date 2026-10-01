@@ -148,9 +148,18 @@ export const processedEvents = pgTable("processed_events", {
 export const eventAuditLogs = pgTable("event_audit_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  eventId: varchar("event_id", { length: 100 }).notNull(),
-  eventType: varchar("event_type", { length: 100 }).notNull(),
-  status: varchar("status", { length: 50 }).notNull(),
+  eventId: varchar("event_id", {
+    length: 100,
+  }).notNull(),
+
+  eventType: varchar("event_type", {
+    length: 100,
+  }).notNull(),
+
+  status: varchar("status", {
+    length: 50,
+  }).notNull(),
+
   payload: jsonb("payload").notNull(),
 
   processedAt: timestamp("processed_at", {
