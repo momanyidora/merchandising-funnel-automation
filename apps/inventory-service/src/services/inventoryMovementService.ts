@@ -1,4 +1,8 @@
-import { applyInventoryMovement } from "../repositories/inventoryMovementRepository.js";
+import {
+  applyInventoryMovement,
+  getInventoryMovements,
+  transferInventory as transferInventoryRepository,
+} from "../repositories/inventoryMovementRepository.js";
 import {
   InventoryItemNotFoundError,
   InvalidMovementQuantityError,
@@ -10,6 +14,7 @@ export async function recordInventoryMovement(data: {
   type: string;
   quantity: number;
   reason?: string;
+  idempotencyKey?: string;
 }) {
   if (data.quantity === 0) {
     throw new InvalidMovementQuantityError();
@@ -21,4 +26,10 @@ export async function recordInventoryMovement(data: {
   }
 
   return result;
+}
+export async function getMovements(inventoryItemId: string) {
+  return getInventoryMovements(inventoryItemId);
+}
+export async function transferInventory(data: { inventoryItemId: string; sourceLocationId: string; destinationLocationId: string; quantity: number; reason?: string; idempotencyKey: string }) {
+  return transferInventoryRepository(data);
 }

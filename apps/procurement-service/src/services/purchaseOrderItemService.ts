@@ -22,8 +22,8 @@ export async function createPurchaseOrderItemService(data: {
     throw new Error("Product ID is required");
   }
 
-  if (data.quantity <= 0) {
-    throw new Error("Quantity must be greater than zero");
+  if (!Number.isSafeInteger(data.quantity) || data.quantity <= 0) {
+    throw new Error("Quantity must be a positive whole number");
   }
 
   const purchaseOrder = await getPurchaseOrderById(data.purchaseOrderId);
@@ -99,8 +99,8 @@ export async function updatePurchaseOrderItemService(
     throw new Error("Items can only be updated on draft purchase orders");
   }
 
-  if (data.quantity !== undefined && data.quantity <= 0) {
-    throw new Error("Quantity must be greater than zero");
+  if (data.quantity !== undefined && (!Number.isSafeInteger(data.quantity) || data.quantity <= 0)) {
+    throw new Error("Quantity must be a positive whole number");
   }
 
   return updatePurchaseOrderItem(id, data);

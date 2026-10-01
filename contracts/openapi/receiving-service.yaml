@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info: {title: Receiving Service, version: 1.0.0}
+servers: [{url: http://localhost:3004}]
+paths:
+  /receiving:
+    post:
+      summary: Record a receipt against an approved PO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purchaseOrderId, grnNumber, items]
+              properties:
+                purchaseOrderId: {type: string, format: uuid}
+                grnNumber: {type: string}
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, receivedQuantity, condition, locationId]
+                    properties:
+                      productId: {type: string, format: uuid}
+                      receivedQuantity: {type: integer, minimum: 0}
+                      condition: {type: string, enum: [GOOD, DAMAGED]}
+                      locationId: {type: string, format: uuid}
+      responses: {'201': {description: Goods Received Note created}, '400': {description: Invalid receipt}, '404': {description: Purchase order not found}}

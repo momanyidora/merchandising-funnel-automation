@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
-import { purchaseOrders } from "../db/schema.js";
+import { eventOutbox, purchaseOrderApprovals, purchaseOrders } from "../db/schema.js";
 
 export async function createPurchaseOrder(data: {
   vendorId: string;
@@ -57,4 +58,16 @@ export async function deletePurchaseOrder(id: string) {
     .returning();
 
   return purchaseOrder;
+}
+
+export async function approvePurchaseOrderAndQueueEvent(data: { id: string; approverId: string; items: unknown[] }) {
+  return db.transaction(async (tx) => {
+    const [purchaseOrder] = await tx.update(purchaseOrders).set({ status: "APPROVED", updatedAt: new Date() }).where(and(eq(purchaseOrders.id, data.id), eq(purchaseOrders.status, "PENDING_APPROVAL"))).returning();
+    if (!purchaseOrder) throw new Error("Purchase order is no longer pending approval");
+    await tx.insert(purchaseOrderApprovals).values({ purchaseOrderId: data.id, approverId: data.approverId });
+    const eventId = randomUUID();
+    const payload = { eventId, eventType: "PurchaseOrderApproved", purchaseOrder, items: data.items };
+    await tx.insert(eventOutbox).values({ eventId, eventType: "PurchaseOrderApproved", payload });
+    return purchaseOrder;
+  });
 }

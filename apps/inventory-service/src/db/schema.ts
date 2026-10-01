@@ -12,11 +12,7 @@ export const inventoryItems = pgTable("inventory_items", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id").notNull(),
 
-  productName: varchar("product_name", {
-    length: 200,
-  })
-    .notNull()
-    .default("Unnamed product"),
+  productName: varchar("product_name", { length: 200 }).notNull().default("Unnamed product"),
 
   onHand: integer("on_hand").notNull().default(0),
 
@@ -85,6 +81,8 @@ export const inventoryMovements = pgTable("inventory_movements", {
   reason: varchar("reason", {
     length: 255,
   }),
+
+  idempotencyKey: varchar("idempotency_key", { length: 150 }).unique(),
 
   createdAt: timestamp("created_at", {
     withTimezone: true,

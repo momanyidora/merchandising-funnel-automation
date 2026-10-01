@@ -2,9 +2,9 @@
   "vendor-management": true,
   "procurement": true,
   "inventory": true,
-  "receiving": false,
-  "warehouse-operations": false,
-  "retail-sales": false,
-  "sales-audit": false,
-  "financials": false
+  "receiving": true,
+  "warehouse-operations": true,
+  "retail-sales": true,
+  "sales-audit": true,
+  "financials": true
 }

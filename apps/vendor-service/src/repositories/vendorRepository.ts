@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, ilike, count, type InferSelectModel } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { vendors } from "../db/schema.js";
 
@@ -41,8 +41,19 @@ export async function vendorExists(id: string): Promise<boolean> {
 
   return vendor !== undefined;
 }
-export async function getAllVendors() {
-  return db.select().from(vendors);
+type VendorRow = InferSelectModel<typeof vendors>;
+export function getAllVendors(): Promise<VendorRow[]>;
+export function getAllVendors(options: { page: number; pageSize: number; search?: string }): Promise<{ items: VendorRow[]; total: number; page: number; pageSize: number; totalPages: number }>;
+export async function getAllVendors(options?: { page: number; pageSize: number; search?: string }) {
+  if (!options) return db.select().from(vendors);
+  const search = options.search?.trim();
+  const where = search ? ilike(vendors.name, `%${search}%`) : undefined;
+  const [items, [totalRow]] = await Promise.all([
+    db.select().from(vendors).where(where).orderBy(vendors.name).limit(options.pageSize).offset((options.page - 1) * options.pageSize),
+    db.select({ total: count() }).from(vendors).where(where),
+  ]);
+  const total = Number(totalRow.total);
+  return { items, total, page: options.page, pageSize: options.pageSize, totalPages: Math.ceil(total / options.pageSize) };
 }
 
 export async function updateVendor(

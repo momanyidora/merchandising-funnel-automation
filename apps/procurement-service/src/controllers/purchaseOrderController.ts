@@ -120,7 +120,10 @@ export async function approvePurchaseOrderController(
   res: Response,
 ) {
   try {
-    const purchaseOrder = await approvePurchaseOrderService(req.params.id);
+    const purchaseOrder = await approvePurchaseOrderService(
+      req.params.id,
+      req.body.approverId,
+    );
 
     res.status(200).json(purchaseOrder);
   } catch (error) {

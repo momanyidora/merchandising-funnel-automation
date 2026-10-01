@@ -1,4 +1,4 @@
-import { eq, type InferSelectModel } from "drizzle-orm";
+import { eq, ilike, inArray, type InferSelectModel } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { inventoryItems } from "../db/schema.js";
 
@@ -39,4 +39,10 @@ export async function getInventoryItemByProductId(
     .where(eq(inventoryItems.productId, productId));
 
   return item ?? null;
+}
+
+export async function searchInventoryProducts(search: string, limit = 20, ids: string[] = []) {
+  const query = search.trim();
+  const where = ids.length ? inArray(inventoryItems.productId, ids) : query ? ilike(inventoryItems.productName, `%${query}%`) : undefined;
+  return db.select({ productId: inventoryItems.productId, productName: inventoryItems.productName, unitCost: inventoryItems.unitCost, onHand: inventoryItems.onHand, reserved: inventoryItems.reserved }).from(inventoryItems).where(where).orderBy(inventoryItems.productName).limit(Math.min(Math.max(limit, 1), 100));
 }

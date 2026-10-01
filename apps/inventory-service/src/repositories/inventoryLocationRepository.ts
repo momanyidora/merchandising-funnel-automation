@@ -14,6 +14,10 @@ export async function createInventoryLocation(data: {
   return location;
 }
 
+export async function getInventoryLocations() {
+  return db.select().from(inventoryLocations);
+}
+
 export async function getInventoryLocationById(id: string) {
   const [location] = await db
     .select()

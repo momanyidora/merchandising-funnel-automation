@@ -1,0 +1,2 @@
+CREATE TABLE event_outbox (event_id uuid PRIMARY KEY, event_type varchar(100) NOT NULL, payload jsonb NOT NULL, attempts integer NOT NULL DEFAULT 0, last_error varchar(1000), next_attempt_at timestamptz NOT NULL DEFAULT now(), created_at timestamptz NOT NULL DEFAULT now(), published_at timestamptz);
+CREATE INDEX event_outbox_pending_idx ON event_outbox(next_attempt_at,created_at) WHERE published_at IS NULL;

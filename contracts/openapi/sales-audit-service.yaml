@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info: {title: Sales Audit Service, version: 1.0.0}
+servers: [{url: http://localhost:3007}]
+paths:
+  /audits:
+    get: {summary: List register reconciliations, responses: {'200': {description: Reconciliations}}}
+    post:
+      summary: Reconcile and close a register
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [storeId, registerId, cashierId, businessDate, counts, managerId, explanation], properties: {storeId: {type: string}, registerId: {type: string}, cashierId: {type: string}, businessDate: {type: string, format: date}, managerId: {type: string}, explanation: {type: string}, counts: {type: array, items: {type: object, required: [method, actual], properties: {method: {type: string}, actual: {type: integer, minimum: 0}}}}}}}}}
+      responses: {'201': {description: Reconciled and closed}, '400': {description: Manager signoff or counts missing}}

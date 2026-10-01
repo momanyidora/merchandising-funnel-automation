@@ -6,6 +6,7 @@ import {
   timestamp,
   unique,
   boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const purchaseOrders = pgTable("purchase_orders", {
@@ -88,4 +89,14 @@ export const purchaseOrderApprovers = pgTable("purchase_order_approvers", {
   role: varchar("role", { length: 50 }).notNull(),
 
   active: boolean("active").notNull().default(true),
+});
+export const eventOutbox = pgTable("event_outbox", {
+  eventId: uuid("event_id").primaryKey(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  payload: jsonb("payload").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: varchar("last_error", { length: 1000 }),
+  nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 });

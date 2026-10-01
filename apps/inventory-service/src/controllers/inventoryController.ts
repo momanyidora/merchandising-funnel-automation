@@ -3,30 +3,18 @@ import {
   createInventory,
   getInventoryById,
   getInventoryByProductId,
+  searchProducts,
 } from "../services/inventoryService.js";
 
 export async function createInventoryController(req: Request, res: Response) {
   try {
     const { productId, productName, unitCost } = req.body;
-
-    if (!productId || unitCost === undefined) {
-      return res.status(400).json({
-        error: "productId, productName and unitCost are required",
-      });
-    }
-
-    const inventory = await createInventory({
-      productId,
-      productName,
-      unitCost,
-    });
+    if (!productName || unitCost === undefined) return res.status(400).json({ error: "productName and unitCost are required" });
+    const inventory = await createInventory({ productId, productName, unitCost });
 
     return res.status(201).json(inventory);
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "Inventory item already exists for this product"
-    ) {
+    if (error instanceof Error && ["Inventory item already exists for this product", "Product name must be at least 2 characters", "Unit cost must be a non-negative whole number in the selected currency"].includes(error.message)) {
       return res.status(409).json({
         error: error.message,
       });
@@ -78,4 +66,8 @@ export async function getInventoryByProductController(
       error: "Failed to retrieve inventory item",
     });
   }
+}
+
+export async function searchInventoryProductsController(req: Request, res: Response) {
+  try { const ids = String(req.query.ids ?? "").split(",").filter(Boolean); const items = await searchProducts(String(req.query.search ?? ""), Number(req.query.limit) || 20, ids); return res.json(items); } catch { return res.status(500).json({ error: "Failed to search products" }); }
 }

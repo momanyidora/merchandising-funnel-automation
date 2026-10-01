@@ -35,11 +35,11 @@ function validateId(id: string, fieldName: string): void {
 function validateReliabilityRecord(data: CreateReliabilityInput): void {
   validateId(data.vendorId, "Vendor ID");
 
-  if (data.expectedQuantity <= 0) {
+  if (!Number.isSafeInteger(data.expectedQuantity) || data.expectedQuantity <= 0) {
     throw new Error("Expected quantity must be greater than 0");
   }
 
-  if (data.receivedQuantity < 0) {
+  if (!Number.isSafeInteger(data.receivedQuantity) || data.receivedQuantity < 0) {
     throw new Error("Received quantity cannot be negative");
   }
 

@@ -24,10 +24,11 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const vendors = await listVendors();
-
+    const page = Number.parseInt(String(req.query.page ?? ""), 10);
+    const pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
+    const vendors = await listVendors(Number.isInteger(page) && page > 0 && Number.isInteger(pageSize) && pageSize > 0 ? { page, pageSize: Math.min(pageSize, 100), search: String(req.query.search ?? "") } : undefined);
     res.json(vendors);
   } catch {
     res.status(500).json({
