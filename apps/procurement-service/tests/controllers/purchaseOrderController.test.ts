@@ -184,7 +184,10 @@ describe("Purchase Order Controller", () => {
 
     await approvePurchaseOrderController(req, res);
 
-    expect(approvePurchaseOrderService).toHaveBeenCalledWith(id, "approver-1");
+    expect(approvePurchaseOrderService).toHaveBeenCalledWith(
+      id,
+      "approver-1",
+    );
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(order);
   });

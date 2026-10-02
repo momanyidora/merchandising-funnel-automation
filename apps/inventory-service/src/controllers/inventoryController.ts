@@ -14,7 +14,23 @@ export async function createInventoryController(req: Request, res: Response) {
 
     return res.status(201).json(inventory);
   } catch (error) {
-    if (error instanceof Error && ["Inventory item already exists for this product", "Product name must be at least 2 characters", "Unit cost must be a non-negative whole number in the selected currency"].includes(error.message)) {
+    if (!(error instanceof Error)) {
+      return res.status(500).json({
+        error: "Failed to create inventory item",
+      });
+    }
+
+    if (
+      error.message === "Product name must be at least 2 characters" ||
+      error.message ===
+        "Unit cost must be a non-negative whole number in the selected currency"
+    ) {
+      return res.status(400).json({
+        error: error.message,
+      });
+    }
+
+    if (error.message === "Inventory item already exists for this product") {
       return res.status(409).json({
         error: error.message,
       });
