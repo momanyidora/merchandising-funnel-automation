@@ -1,0 +1,4 @@
+create extension if not exists pgcrypto;
+create table if not exists processed_financial_events(event_id varchar(100) primary key,event_type varchar(100) not null,processed_at timestamptz not null default now());
+create table if not exists journal_entries(id uuid primary key default gen_random_uuid(),event_id varchar(100) not null,account_code varchar(50) not null,debit bigint not null default 0 check(debit>=0),credit bigint not null default 0 check(credit>=0),currency varchar(3) not null,reference varchar(100),business_date date not null,created_at timestamptz not null default now(),check(debit=0 or credit=0));
+create table if not exists accounts_payable(id uuid primary key default gen_random_uuid(),event_id varchar(100) not null,vendor_id uuid not null,currency varchar(3) not null,amount bigint not null check(amount>=0),due_date date not null,status varchar(20) not null default 'OPEN',unique(event_id,vendor_id));

@@ -98,18 +98,43 @@ export default function InventoryPage() {
       setLoading(false);
     }
   }
-
   async function createProduct(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError("");
+    event.preventDefault();
+    setError("");
+
     const cost = Number(newUnitCost);
-    if (!Number.isSafeInteger(cost) || cost < 0) { setError("Enter a non-negative whole-number unit cost."); return; }
+
+    if (!Number.isFinite(cost) || cost < 0) {
+      setError("Enter a non-negative unit cost.");
+      return;
+    }
+
     setCreatingProduct(true);
+
     try {
-      const response = await fetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productName: newProductName, unitCost: cost }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create product");
-      setProductId(data.productId); setNewProductName(""); setNewUnitCost("");
-    } catch (err) { setError(err instanceof Error ? err.message : "Unable to create product"); }
-    finally { setCreatingProduct(false); }
+      const response = await fetch("/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: newProductName.trim(),
+          unitCost: cost,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to create product");
+      }
+
+      setProductId(data.productId);
+      setNewProductName("");
+      setNewUnitCost("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to create product");
+    } finally {
+      setCreatingProduct(false);
+    }
   }
 
   async function loadLocations() {
@@ -167,7 +192,9 @@ export default function InventoryPage() {
           onSubmit={findInventory}
           className="mt-4 flex flex-col gap-3 sm:flex-row"
         >
-          <div className="flex-1"><ProductPicker value={productId} onChange={setProductId} /></div>
+          <div className="flex-1">
+            <ProductPicker value={productId} onChange={setProductId} />
+          </div>
 
           <button
             type="submit"
@@ -179,13 +206,69 @@ export default function InventoryPage() {
         </form>
       </section>
 
-      <form onSubmit={createProduct} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-[1fr_180px_auto]">
-        <label className="sr-only" htmlFor="new-product-name">Product name</label>
-        <input id="new-product-name" value={newProductName} onChange={e=>setNewProductName(e.target.value)} required minLength={2} placeholder="New product name" className="rounded-lg border border-slate-300 px-3 py-2" />
-        <label className="sr-only" htmlFor="new-product-cost">Unit cost (whole KES)</label>
-        <input id="new-product-cost" type="number" min="0" step="1" inputMode="numeric" value={newUnitCost} onChange={e=>setNewUnitCost(e.target.value)} required placeholder="Unit cost (KES)" className="rounded-lg border border-slate-300 px-3 py-2" />
-        <button disabled={creatingProduct} className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-50">{creatingProduct?"Creating…":"Add product"}</button>
-      </form>
+      <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Add Product</h2>
+
+          <p className="mt-1 text-sm text-slate-600">
+            Add a product to the inventory catalog with its unit cost.
+          </p>
+        </div>
+
+        <form
+          onSubmit={createProduct}
+          className="grid gap-4 sm:grid-cols-[1fr_200px_auto]"
+        >
+          <div>
+            <label
+              htmlFor="new-product-name"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Product name
+            </label>
+
+            <input
+              id="new-product-name"
+              value={newProductName}
+              onChange={(e) => setNewProductName(e.target.value)}
+              required
+              minLength={2}
+              placeholder="e.g. Test product"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="new-product-cost"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Unit cost (KES)
+            </label>
+
+            <input
+              id="new-product-cost"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={newUnitCost}
+              onChange={(e) => setNewUnitCost(e.target.value)}
+              required
+              placeholder="e.g. 500.00"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={creatingProduct}
+            className="self-end rounded-lg bg-slate-900 px-5 py-2.5 font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {creatingProduct ? "Creating..." : "Add product"}
+          </button>
+        </form>
+      </section>
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
@@ -368,7 +451,10 @@ export default function InventoryPage() {
                         </td>
 
                         <td className="px-3 py-3 text-slate-600">
-                          {new Date(movement.createdAt).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}
+                          {new Date(movement.createdAt).toLocaleString(
+                            "en-KE",
+                            { dateStyle: "medium", timeStyle: "short" },
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -386,7 +472,9 @@ export default function InventoryPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-sm text-slate-600">Product</p>
-                <p className="mt-1 font-medium text-slate-900">{inventory.productName}</p>
+                <p className="mt-1 font-medium text-slate-900">
+                  {inventory.productName}
+                </p>
               </div>
 
               <div>
@@ -413,14 +501,20 @@ export default function InventoryPage() {
               <div>
                 <p className="text-sm text-slate-600">Created</p>
                 <p className="mt-1 font-medium text-slate-900">
-                  {new Date(inventory.createdAt).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}
+                  {new Date(inventory.createdAt).toLocaleString("en-KE", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
                 </p>
               </div>
 
               <div>
                 <p className="text-sm text-slate-600">Last Updated</p>
                 <p className="mt-1 font-medium text-slate-900">
-                  {new Date(inventory.updatedAt).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}
+                  {new Date(inventory.updatedAt).toLocaleString("en-KE", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
                 </p>
               </div>
             </div>

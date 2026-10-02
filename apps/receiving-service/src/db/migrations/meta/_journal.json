@@ -15,6 +15,13 @@
       "when": 1790250000002,
       "tag": "0002_event_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790692940763,
+      "tag": "0003_shiny_catseye",
+      "breakpoints": true
     }
   ]
 }

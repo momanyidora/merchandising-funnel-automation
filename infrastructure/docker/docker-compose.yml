@@ -24,6 +24,7 @@ services:
       - "5434:5432"
     volumes:
       - procurement_postgres_data:/var/lib/postgresql/data
+
   inventory-postgres:
     image: postgres:16
     container_name: mms-inventory-postgres
@@ -36,6 +37,20 @@ services:
       - "5435:5432"
     volumes:
       - inventory_postgres_data:/var/lib/postgresql/data
+
+  receiving-postgres:
+    image: postgres:16
+    container_name: mms-receiving-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: receiving_db
+      POSTGRES_USER: receiving_user
+      POSTGRES_PASSWORD: receiving_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - receiving_postgres_data:/var/lib/postgresql/data
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: mms-rabbitmq
@@ -43,7 +58,9 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
 volumes:
   vendor_postgres_data:
   procurement_postgres_data:
   inventory_postgres_data:
+  receiving_postgres_data:

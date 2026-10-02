@@ -176,12 +176,15 @@ describe("Purchase Order Controller", () => {
 
     vi.mocked(approvePurchaseOrderService).mockResolvedValue(order as never);
 
-    const req = { params: { id } } as any;
+    const req = {
+      params: { id },
+      body: { approverId: "approver-1" },
+    } as any;
     const res = mockResponse();
 
     await approvePurchaseOrderController(req, res);
 
-    expect(approvePurchaseOrderService).toHaveBeenCalledWith(id);
+    expect(approvePurchaseOrderService).toHaveBeenCalledWith(id, "approver-1");
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(order);
   });
