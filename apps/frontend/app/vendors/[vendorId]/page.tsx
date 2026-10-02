@@ -151,6 +151,32 @@ export default function VendorDetailPage() {
     }
   }
 
+  function getStatusClasses(status: string) {
+    switch (status) {
+      case "ON_TIME":
+        return "bg-emerald-50 text-emerald-700";
+
+      case "LATE":
+        return "bg-amber-50 text-amber-700";
+
+      case "SHORT":
+        return "bg-red-50 text-red-700";
+
+      case "OVERAGE":
+        return "bg-blue-50 text-blue-700";
+
+      case "DAMAGED":
+        return "bg-purple-50 text-purple-700";
+
+      default:
+        return "bg-slate-100 text-slate-700";
+    }
+  }
+
+  function formatStatus(status: string) {
+    return status.replace("_", " ");
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen bg-slate-50">
