@@ -154,36 +154,6 @@ export default function InventoryPage() {
     }
   }
 
-  async function createProduct(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError("");
-    const cost = Number(newUnitCost);
-    if (!Number.isSafeInteger(cost) || cost < 0) { setError("Enter a non-negative whole-number unit cost."); return; }
-    setCreatingProduct(true);
-    try {
-      const response = await fetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productName: newProductName, unitCost: cost }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to create product");
-      setProductId(data.productId); setNewProductName(""); setNewUnitCost("");
-    } catch (err) { setError(err instanceof Error ? err.message : "Unable to create product"); }
-    finally { setCreatingProduct(false); }
-  }
-
-  async function loadLocations() {
-    try {
-      const response = await fetch("/api/inventory/locations");
-
-      if (!response.ok) {
-        throw new Error("Failed to retrieve locations.");
-      }
-
-      const data = await response.json();
-      setLocations(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to retrieve locations.",
-      );
-    }
-  }
-
   const available = inventory ? inventory.onHand - inventory.reserved : 0;
 
   const inventoryValue = inventory ? inventory.onHand * inventory.unitCost : 0;
