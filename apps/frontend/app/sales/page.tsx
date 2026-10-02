@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import ProductPicker from "../components/ProductPicker";
-type Location={id:string;name:string;code:string};type Line={productId:string;productName:string;quantity:string;unitPrice:string;locationId:string};
+type Location={id:string;name:string;code:string};type Line={productId:string;productName:string;quantity:string;unitPrice:string;locationId:string};type TextField=[string,string,(value:string)=>void];
 export default function SalesPage(){
  const [storeName,setStoreName]=useState("");const [registerName,setRegisterName]=useState("");const [cashierName,setCashierName]=useState("");const [currency]=useState("KES");const [locations,setLocations]=useState<Location[]>([]);const [lines,setLines]=useState<Line[]>([{productId:"",productName:"",quantity:"1",unitPrice:"",locationId:""}]);const [method,setMethod]=useState("CASH");const [paymentAmount,setPaymentAmount]=useState("");const [error,setError]=useState("");const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);
  useEffect(()=>{fetch("/api/inventory/locations").then(r=>r.ok?r.json():[]).then(setLocations).catch(()=>setLocations([]))},[]);

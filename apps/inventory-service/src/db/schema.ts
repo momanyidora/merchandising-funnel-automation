@@ -10,10 +10,11 @@ import {
 
 export const inventoryItems = pgTable("inventory_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-
   productId: uuid("product_id").notNull(),
 
-  productName: varchar("product_name", { length: 200 }).notNull().default("Unnamed product"),
+  productName: varchar("product_name", { length: 200 })
+    .notNull()
+    .default("Unnamed product"),
 
   onHand: integer("on_hand").notNull().default(0),
 
@@ -144,7 +145,6 @@ export const processedEvents = pgTable("processed_events", {
     .defaultNow()
     .notNull(),
 });
-
 export const eventAuditLogs = pgTable("event_audit_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
 
@@ -162,13 +162,9 @@ export const eventAuditLogs = pgTable("event_audit_logs", {
 
   payload: jsonb("payload").notNull(),
 
-  createdAt: timestamp("created_at", {
+  processedAt: timestamp("processed_at", {
     withTimezone: true,
   })
     .defaultNow()
     .notNull(),
-
-  processedAt: timestamp("processed_at", {
-    withTimezone: true,
-  }),
 });

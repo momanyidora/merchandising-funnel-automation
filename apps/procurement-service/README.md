@@ -1,6 +1,6 @@
 # Procurement Service
 
-Part of the **Merchandising Funnel Automation** capstone — this is Module 2.
+Part of the **Merchandising Funnel Automation** capstone - this is Module 2.
 
 ## What this is
 

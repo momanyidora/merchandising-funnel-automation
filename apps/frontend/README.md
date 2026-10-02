@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Merchandising Funnel Frontend
 
-## Getting Started
+The web interface for the Merchandising Funnel Automation system. It is a Next.js app that brings vendor management, purchase orders, inventory, receiving, warehouse operations, retail sales, sales audit, and financial reporting into one interface.
 
-First, run the development server:
+## Development
+
+From the repository root, install workspace dependencies and start the frontend:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev --workspace=frontend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The development server runs on `http://localhost:3000`. Backend services should be running for data-backed pages to work. The frontend proxies `/api/vendor`, `/api/procurement`, `/api/inventory`, `/api/receiving`, `/api/warehouse`, `/api/sales`, `/api/sales-audit`, and `/api/financials` to the corresponding local services on ports 3001–3008 through `next.config.ts`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Routes live under `app/`. The application includes pages for vendors, purchase orders, inventory, receiving, warehouse, sales, sales audit, and financials, with shared UI components under `app/components/`.
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev --workspace=frontend
+npm run build --workspace=frontend
+npm run start --workspace=frontend
+npm run lint --workspace=frontend
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The frontend uses Next.js, React, TypeScript, and Tailwind CSS. Backend API contracts and service setup are documented in the repository root README and each service README.

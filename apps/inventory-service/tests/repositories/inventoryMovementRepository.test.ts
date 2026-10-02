@@ -14,7 +14,7 @@ describe("Inventory Movement Repository", () => {
 
     const location = await createInventoryLocation({
       name: `Location ${Date.now()}`,
-      code: `LOC-${Date.now()}`,
+      code: `LOC-${randomUUID()}`,
     });
 
     const result = await applyInventoryMovement({
@@ -32,7 +32,7 @@ describe("Inventory Movement Repository", () => {
   it("should return null for a missing inventory item", async () => {
     const location = await createInventoryLocation({
       name: `Location ${Date.now()}`,
-      code: `LOC-${Date.now()}`,
+      code: `LOC-${randomUUID()}`,
     });
 
     const result = await applyInventoryMovement({
@@ -54,7 +54,7 @@ describe("Inventory Movement Repository", () => {
 
     const location = await createInventoryLocation({
       name: `Location ${Date.now()}`,
-      code: `LOC-${Date.now()}`,
+      code: `LOC-${randomUUID()}`,
     });
 
     await expect(

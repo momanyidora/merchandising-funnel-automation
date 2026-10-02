@@ -21,9 +21,7 @@ export async function createInventoryItem(data: {
   return item;
 }
 
-export async function getInventoryItemById(
-  id: string,
-): Promise<InventoryItem | null> {
+export async function getInventoryItemById(id: string): Promise<typeof inventoryItems.$inferSelect | null> {
   const [item] = await db
     .select()
     .from(inventoryItems)
@@ -32,7 +30,9 @@ export async function getInventoryItemById(
   return item ?? null;
 }
 
-export async function getInventoryItemByProductId(productId: string): Promise<InventoryItem | null> {
+export async function getInventoryItemByProductId(
+  productId: string,
+): Promise<typeof inventoryItems.$inferSelect | null> {
   const [item] = await db
     .select()
     .from(inventoryItems)
