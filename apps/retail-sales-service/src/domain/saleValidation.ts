@@ -7,6 +7,7 @@ export function validateSaleAmounts(items: SaleLineInput[], payments: TenderInpu
   if (new Set(payments.map((payment) => payment.method)).size !== payments.length) throw new Error("Tender methods must be unique per sale");
   const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  if (!Number.isSafeInteger(total) || paid !== total) throw new Error("Payments must equal the sale total in whole currency units");
+  if (!Number.isSafeInteger(total) || !Number.isSafeInteger(paid)) throw new Error("Sale totals and payments must be in whole currency units");
+  if (paid < total) throw new Error("Payment amount is less than the total");
   return total;
 }

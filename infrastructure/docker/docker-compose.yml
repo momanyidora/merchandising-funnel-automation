@@ -51,6 +51,58 @@ services:
     volumes:
       - receiving_postgres_data:/var/lib/postgresql/data
 
+  warehouse-postgres:
+    image: postgres:16
+    container_name: mms-warehouse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: warehouse_db
+      POSTGRES_USER: warehouse_user
+      POSTGRES_PASSWORD: warehouse_password
+    ports:
+      - "5437:5432"
+    volumes:
+      - warehouse_postgres_data:/var/lib/postgresql/data
+
+  retail-postgres:
+    image: postgres:16
+    container_name: mms-retail-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: retail_db
+      POSTGRES_USER: retail_user
+      POSTGRES_PASSWORD: retail_password
+    ports:
+      - "5438:5432"
+    volumes:
+      - retail_postgres_data:/var/lib/postgresql/data
+
+  sales-audit-postgres:
+    image: postgres:16
+    container_name: mms-sales-audit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sales_audit_db
+      POSTGRES_USER: sales_audit_user
+      POSTGRES_PASSWORD: sales_audit_password
+    ports:
+      - "5439:5432"
+    volumes:
+      - sales_audit_postgres_data:/var/lib/postgresql/data
+
+  financials-postgres:
+    image: postgres:16
+    container_name: mms-financials-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: financials_db
+      POSTGRES_USER: financials_user
+      POSTGRES_PASSWORD: financials_password
+    ports:
+      - "5440:5432"
+    volumes:
+      - financials_postgres_data:/var/lib/postgresql/data
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: mms-rabbitmq
@@ -64,3 +116,7 @@ volumes:
   procurement_postgres_data:
   inventory_postgres_data:
   receiving_postgres_data:
+  warehouse_postgres_data:
+  retail_postgres_data:
+  sales_audit_postgres_data:
+  financials_postgres_data:

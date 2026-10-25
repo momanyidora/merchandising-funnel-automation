@@ -1,7 +1,21 @@
 import { Router, Request, Response } from "express";
-import { createReceiving } from "../services/receivingService.js";
+import {
+  createReceiving,
+  getReceivableDetail,
+} from "../services/receivingService.js";
 
 const router = Router();
+
+router.get("/receivable/:purchaseOrderId", async (req, res) => {
+  try {
+    const data = await getReceivableDetail(req.params.purchaseOrderId);
+    res.json(data);
+  } catch (error) {
+    res.status(400).json({
+      error: error instanceof Error ? error.message : "Failed",
+    });
+  }
+});
 
 router.post("/", async (req: Request, res: Response) => {
   try {

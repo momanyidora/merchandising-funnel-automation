@@ -12,6 +12,7 @@ import { classifyReceipt } from "../domain/receiptDiscrepancy.js";
 
 type ReceivingItemInput = {
   productId: string;
+  productName?: string;
   receivedQuantity: number;
   condition: "GOOD" | "DAMAGED";
   locationId: string;
@@ -104,7 +105,7 @@ export async function createReceiving(data: {
   });
   const result = await createGoodsReceiptWithItems({
     purchaseOrderId: purchaseOrder.id,
-    grnNumber:grnNumber,
+    grnNumber: grnNumber,
     status: receivingItems.some((item) => item.discrepancyType !== "NONE")
       ? "DISCREPANCY"
       : "COMPLETED",
@@ -114,7 +115,7 @@ export async function createReceiving(data: {
       eventType: "GoodsReceived",
       payload: {
         purchaseOrderId: purchaseOrder.id,
-        grnNumber:grnNumber,
+        grnNumber: grnNumber,
         vendorId: purchaseOrder.vendorId,
         currency: purchaseOrder.currency,
         paymentTerms: purchaseOrder.paymentTerms,
@@ -128,6 +129,7 @@ export async function createReceiving(data: {
             );
             return {
               productId: item.productId,
+              productName: item.productName,
               quantity: item.receivedQuantity,
               locationId: item.locationId,
               condition: item.condition,
@@ -153,4 +155,30 @@ export async function createReceiving(data: {
     },
   });
   return result;
+}
+export async function getReceivableDetail(purchaseOrderId: string) {
+  const { purchaseOrder, items } =
+    await getReceivablePurchaseOrder(purchaseOrderId);
+  const receivedToDate =
+    await getReceivedQuantitiesByPurchaseOrder(purchaseOrderId);
+
+  return {
+    purchaseOrder,
+    items: items.map(
+      (item: {
+        productId: string;
+        quantity: number;
+        lockedUnitCost: number;
+      }) => ({
+        productId: item.productId,
+        originalQuantity: item.quantity,
+        receivedToDate: receivedToDate.get(item.productId) ?? 0,
+        remainingQuantity: Math.max(
+          0,
+          item.quantity - (receivedToDate.get(item.productId) ?? 0),
+        ),
+        lockedUnitCost: item.lockedUnitCost,
+      }),
+    ),
+  };
 }

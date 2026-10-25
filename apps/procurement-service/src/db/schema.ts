@@ -90,6 +90,17 @@ export const purchaseOrderApprovers = pgTable("purchase_order_approvers", {
 
   active: boolean("active").notNull().default(true),
 });
+export const purchaseOrderAmendments = pgTable("purchase_order_amendments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  purchaseOrderId: uuid("purchase_order_id").notNull().references(() => purchaseOrders.id, { onDelete: "cascade" }),
+  requestedBy: varchar("requested_by", { length: 120 }).notNull(),
+  reason: varchar("reason", { length: 500 }).notNull(),
+  changeSummary: varchar("change_summary", { length: 1000 }).notNull(),
+  status: varchar("status", { length: 30 }).notNull().default("PENDING"),
+  reviewedBy: varchar("reviewed_by", { length: 120 }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
 export const eventOutbox = pgTable("event_outbox", {
   eventId: uuid("event_id").primaryKey(),
   eventType: varchar("event_type", { length: 100 }).notNull(),

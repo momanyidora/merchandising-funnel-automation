@@ -26,11 +26,23 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const page = Number.parseInt(String(req.query.page ?? ""), 10);
-    const pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
-    const vendors = await listVendors(Number.isInteger(page) && page > 0 && Number.isInteger(pageSize) && pageSize > 0 ? { page, pageSize: Math.min(pageSize, 100), search: String(req.query.search ?? "") } : undefined);
-    res.json(vendors);
-  } catch {
+    // Always default to page 1, pageSize 10, and empty search
+    const page = Number.parseInt(String(req.query.page ?? "1"), 10);
+    const pageSize = Number.parseInt(String(req.query.pageSize ?? "10"), 10);
+    const search = String(req.query.search ?? "");
+
+    const vendors = await listVendors({
+      page: Number.isInteger(page) && page > 0 ? page : 1,
+      pageSize:
+        Number.isInteger(pageSize) && pageSize > 0
+          ? Math.min(pageSize, 100)
+          : 10,
+      search,
+    });
+
+    res.json(vendors); // Now ALWAYS returns { items: [...], total: 4, page: 1, ... }
+  } catch (error) {
+    console.error("Error fetching vendors:", error); // This will print to your terminal if it fails
     res.status(500).json({
       error: "Failed to retrieve vendors",
     });
