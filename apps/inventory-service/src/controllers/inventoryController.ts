@@ -5,12 +5,21 @@ import {
   getInventoryByProductId,
   searchProducts,
 } from "../services/inventoryService.js";
+import { listAllInventory } from "../services/inventoryService.js";
+
 
 export async function createInventoryController(req: Request, res: Response) {
   try {
     const { productId, productName, unitCost } = req.body;
-    if (!productName || unitCost === undefined) return res.status(400).json({ error: "productName and unitCost are required" });
-    const inventory = await createInventory({ productId, productName, unitCost });
+    if (!productName || unitCost === undefined)
+      return res
+        .status(400)
+        .json({ error: "productName and unitCost are required" });
+    const inventory = await createInventory({
+      productId,
+      productName,
+      unitCost,
+    });
 
     return res.status(201).json(inventory);
   } catch (error) {
@@ -84,6 +93,30 @@ export async function getInventoryByProductController(
   }
 }
 
-export async function searchInventoryProductsController(req: Request, res: Response) {
-  try { const ids = String(req.query.ids ?? "").split(",").filter(Boolean); const items = await searchProducts(String(req.query.search ?? ""), Number(req.query.limit) || 20, ids); return res.json(items); } catch { return res.status(500).json({ error: "Failed to search products" }); }
+export async function searchInventoryProductsController(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const ids = String(req.query.ids ?? "")
+      .split(",")
+      .filter(Boolean);
+    const items = await searchProducts(
+      String(req.query.search ?? ""),
+      Number(req.query.limit) || 20,
+      ids,
+    );
+    return res.json(items);
+  } catch {
+    return res.status(500).json({ error: "Failed to search products" });
+  }
+}
+
+export async function listAllInventoryController(_req: Request, res: Response) {
+  try {
+    const items = await listAllInventory();
+    return res.status(200).json(items);
+  } catch {
+    return res.status(500).json({ error: "Failed to list inventory" });
+  }
 }

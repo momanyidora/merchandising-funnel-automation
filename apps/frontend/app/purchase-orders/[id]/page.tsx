@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ProductPicker from "../../components/ProductPicker";
+import Sidebar from "../../components/Sidebar";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -37,6 +38,15 @@ type PurchaseOrderItem = {
   productId: string;
   quantity: number;
   lockedUnitCost: number;
+  createdAt: string;
+};
+
+type PurchaseOrderAmendment = {
+  id: string;
+  requestedBy: string;
+  reason: string;
+  changeSummary: string;
+  status: string;
   createdAt: string;
 };
 
@@ -85,6 +95,11 @@ export default function PurchaseOrderDetailPage() {
   const [addingItem, setAddingItem] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [amendments, setAmendments] = useState<PurchaseOrderAmendment[]>([]);
+  const [amendmentRequester, setAmendmentRequester] = useState("");
+  const [amendmentReason, setAmendmentReason] = useState("");
+  const [amendmentSummary, setAmendmentSummary] = useState("");
+  const [requestingAmendment, setRequestingAmendment] = useState(false);
 
   async function loadOrder() {
     try {
@@ -166,6 +181,36 @@ export default function PurchaseOrderDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    fetch(`/api/procurement/purchase-orders/${id}/amendments`)
+      .then((response) => (response.ok ? response.json() : []))
+      .then(setAmendments)
+      .catch(() => setAmendments([]));
+  }, [id]);
+
+  async function handleRequestAmendment(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      setRequestingAmendment(true);
+      setError("");
+      const response = await fetch(`/api/procurement/purchase-orders/${id}/amendments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestedBy: amendmentRequester, reason: amendmentReason, changeSummary: amendmentSummary }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to request an amendment");
+      setAmendments((current) => [data, ...current]);
+      setAmendmentRequester("");
+      setAmendmentReason("");
+      setAmendmentSummary("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to request an amendment");
+    } finally {
+      setRequestingAmendment(false);
+    }
+  }
 
   useEffect(() => {
     if (!order?.vendorId) {
@@ -311,8 +356,9 @@ export default function PurchaseOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
-        <main className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        <Sidebar />
+        <main className="flex min-h-screen min-w-0 flex-1 items-center justify-center">
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <RefreshCw size={18} className="animate-spin" />
             Loading purchase order...
@@ -324,8 +370,9 @@ export default function PurchaseOrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <main className="mx-auto max-w-3xl px-6 py-16">
+      <div className="flex min-h-screen bg-slate-50">
+        <Sidebar />
+        <main className="mx-auto w-full max-w-3xl min-w-0 flex-1 px-6 py-16">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
             <p className="font-semibold text-red-800">
               Purchase order not found.
@@ -350,8 +397,9 @@ export default function PurchaseOrderDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <main className="min-h-screen lg:ml-64">
+    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+      <Sidebar />
+      <main className="min-h-screen min-w-0 flex-1">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
@@ -616,6 +664,27 @@ export default function PurchaseOrderDetailPage() {
                     </button>
                   </div>
                 </form>
+              </section>
+            )}
+
+            {(order.status === "APPROVED" || order.status === "SENT" || amendments.length > 0) && (
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-6 py-5">
+                  <h2 className="text-lg font-semibold text-slate-950">Amendments</h2>
+                  <p className="mt-1 text-sm text-slate-500">Request and review changes to an approved or sent purchase order.</p>
+                </div>
+                {(order.status === "APPROVED" || order.status === "SENT") && (
+                  <form onSubmit={handleRequestAmendment} className="grid gap-4 border-b border-slate-100 p-6 md:grid-cols-2">
+                    <input required value={amendmentRequester} onChange={(event) => setAmendmentRequester(event.target.value)} placeholder="Requester name" className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+                    <input required value={amendmentReason} onChange={(event) => setAmendmentReason(event.target.value)} placeholder="Reason for change" className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+                    <textarea required value={amendmentSummary} onChange={(event) => setAmendmentSummary(event.target.value)} placeholder="Describe the requested change" rows={3} className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm md:col-span-2" />
+                    <div className="md:col-span-2"><button disabled={requestingAmendment} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{requestingAmendment ? "Requesting..." : "Request amendment"}</button></div>
+                  </form>
+                )}
+                <div className="divide-y divide-slate-100">
+                  {amendments.map((amendment) => <div key={amendment.id} className="p-5 text-sm"><div className="flex items-center justify-between gap-4"><p className="font-semibold text-slate-900">{amendment.reason}</p><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{formatStatus(amendment.status)}</span></div><p className="mt-2 text-slate-600">{amendment.changeSummary}</p><p className="mt-2 text-xs text-slate-500">Requested by {amendment.requestedBy} · {new Date(amendment.createdAt).toLocaleString("en-KE")}</p></div>)}
+                  {amendments.length === 0 && <p className="p-6 text-sm text-slate-500">No amendment requests have been recorded.</p>}
+                </div>
               </section>
             )}
 

@@ -14,8 +14,10 @@ export async function processGoodsReceivedEvent(event: {
   purchaseOrderId?: string;
   items?: Array<{
     productId: string;
+    productName?: string;
     quantity: number;
     locationId: string;
+    unitCost?: number;
   }>;
 }) {
   if (!event.eventId) {
@@ -41,18 +43,33 @@ export async function processGoodsReceivedEvent(event: {
         throw new Error("Received quantity must be greater than zero");
       }
 
-      const [inventory] = await tx
+      const inventoryRows = await tx
         .select()
         .from(inventoryItems)
         .where(eq(inventoryItems.productId, item.productId))
         .limit(1)
         .for("update");
 
+      let inventory = inventoryRows[0];
       if (!inventory) {
-        console.error(
-          `Inventory item not found for product: ${item.productId}`,
+        // Auto-create inventory item for products not yet tracked
+        console.log(
+          `Auto-creating inventory item for product ${item.productId}`,
         );
-        continue;
+        const [created] = await tx
+          .insert(inventoryItems)
+          .values({
+            productId: item.productId,
+            productName:
+              item.productName ?? `Product ${item.productId.slice(0, 8)}`,
+            unitCost: item.unitCost ?? 0,
+            onHand: 0,
+            reserved: 0,
+            onOrder: 0,
+            lowStockThreshold: 10,
+          })
+          .returning();
+        inventory = created;
       }
 
       const [location] = await tx
@@ -88,11 +105,7 @@ export async function processGoodsReceivedEvent(event: {
         throw new Error("Insufficient inventory");
       }
 
-      const newOnOrder = inventory.onOrder - item.quantity;
-
-      if (newOnOrder < 0) {
-        throw new Error("On-order quantity cannot be negative");
-      }
+      const newOnOrder = Math.max(0, inventory.onOrder - item.quantity);
 
       await tx
         .update(inventoryItems)

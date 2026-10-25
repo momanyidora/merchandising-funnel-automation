@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Boxes,
   ClipboardList,
   LayoutDashboard,
   Truck,
@@ -13,24 +12,34 @@ import {
   ClipboardCheck,
   Wallet,
   ChevronRight,
+  Boxes,
 } from "lucide-react";
 
-const phase1Modules = [
+const overviewModules = [
   {
     name: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
   },
+];
+
+const supplierModules = [
   {
     name: "Vendors",
     href: "/vendors",
     icon: Truck,
   },
+];
+
+const procurementModules = [
   {
-    name: "Procurement",
+    name: "Purchase Orders",
     href: "/purchase-orders",
     icon: ClipboardList,
   },
+];
+
+const stockModules = [
   {
     name: "Inventory",
     href: "/inventory",
@@ -49,10 +58,18 @@ const phase3Modules = [
 const phase4Modules = [{ name: "Financials", href: "/financials", icon: Wallet }];
 
 type FeatureMap = Record<string, boolean>;
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [features, setFeatures] = useState<FeatureMap>({});
+  const [hash, setHash] = useState("");
   useEffect(() => { fetch("/api/features").then(r => r.json()).then(setFeatures).catch(() => setFeatures({})); }, []);
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash);
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, [pathname]);
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -74,17 +91,25 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-6">
-        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-          Main Menu
-        </p>
-
-        <div className="space-y-1">
-          {phase1Modules.map((module) => {
+        {[
+          { label: "Overview", items: overviewModules },
+          { label: "Suppliers", items: supplierModules },
+          { label: "Procurement", items: procurementModules },
+          { label: "Stock", items: stockModules },
+        ].map((section, sectionIndex) => (
+          <section key={section.label} className={sectionIndex === 0 ? "" : "mt-6 border-t border-slate-100 pt-5"}>
+            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              {section.label}
+            </p>
+            <div className="space-y-1">
+              {section.items.map((module) => {
             const Icon = module.icon;
-            const isActive =
-              module.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(module.href);
+            const [modulePath, moduleHash] = module.href.split("#");
+            const isActive = module.href === "/"
+              ? pathname === "/"
+              : moduleHash
+                ? pathname === modulePath && hash === `#${moduleHash}`
+                : pathname === modulePath;
 
             return (
               <Link
@@ -114,8 +139,10 @@ export default function Sidebar() {
                 )}
               </Link>
             );
-          })}
-        </div>
+              })}
+            </div>
+          </section>
+        ))}
 
         {[
           {label:"Warehouse",items:phase2Modules,flags:["receiving","warehouse-operations"]},

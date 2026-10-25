@@ -11,10 +11,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [purchaseOrderId, grnNumber, items]
+              required: [purchaseOrderId, items]
               properties:
                 purchaseOrderId: {type: string, format: uuid}
-                grnNumber: {type: string}
+                grnNumber:
+                  type: string
+                  readOnly: true
+                  description: Server-generated Goods Received Note number.
                 items:
                   type: array
                   items:

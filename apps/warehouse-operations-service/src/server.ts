@@ -129,7 +129,7 @@ async function consumeGoodsReceived(): Promise<void> {
         }
         await client.query("insert into processed_events(event_id) values($1) on conflict do nothing", [event.eventId]);
         await client.query("commit"); channel.ack(message);
-      } catch (error) { await client.query("rollback").catch(()=>undefined); console.error("GoodsReceived putaway event failed",error); channel.nack(message,false,true); }
+      } catch (error) { await client.query("rollback").catch(()=>undefined); console.error("GoodsReceived putaway event failed",error); channel.nack(message,false,false); }
       finally { client.release(); }
     });
   } catch (error) { console.error("Warehouse event consumer unavailable",error); setTimeout(()=>void consumeGoodsReceived(),3000); }

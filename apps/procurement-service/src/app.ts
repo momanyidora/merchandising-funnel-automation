@@ -1,6 +1,7 @@
 import express from "express";
 import purchaseOrderRoutes from "./routes/purchaseOrderRoutes.js";
 import purchaseOrderItemRoutes from "./routes/purchaseOrderItemRoutes.js";
+import purchaseOrderAmendmentRoutes from "./routes/purchaseOrderAmendmentRoutes.js";
 import { requireFeature } from "./middleware/featureFlagMiddleware.js";
 
 const app = express();
@@ -21,5 +22,6 @@ app.use(
   requireFeature("procurement"),
   purchaseOrderItemRoutes,
 );
+app.use("/purchase-orders", requireFeature("procurement"), purchaseOrderAmendmentRoutes);
 
 export default app;
