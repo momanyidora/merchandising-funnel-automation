@@ -50,10 +50,11 @@ type Sale = {
 };
 
 const TAX_RATE = 16;
+let lineSequence = 0;
 
-function emptyLine(): Line {
+function emptyLine(key: string): Line {
   return {
-    key: crypto.randomUUID(),
+    key,
     productId: "",
     productName: "",
     quantity: "1",
@@ -69,7 +70,9 @@ export default function SalesPage() {
   const [cashierName, setCashierName] = useState("");
 
   const [locations, setLocations] = useState<Location[]>([]);
-  const [lines, setLines] = useState<Line[]>([emptyLine()]);
+  // Keep the initial key deterministic: this state is created during server
+  // rendering too, where browser crypto APIs may not be available.
+  const [lines, setLines] = useState<Line[]>([emptyLine("initial-line")]);
   const [method, setMethod] = useState("CASH");
   const [paymentAmount, setPaymentAmount] = useState("");
   const [error, setError] = useState("");
@@ -158,12 +161,14 @@ export default function SalesPage() {
 
   function removeLine(index: number) {
     setLines((prev) =>
-      prev.length === 1 ? [emptyLine()] : prev.filter((_, i) => i !== index),
+      prev.length === 1
+        ? [emptyLine(`line-${++lineSequence}`)]
+        : prev.filter((_, i) => i !== index),
     );
   }
 
   function addLine() {
-    setLines((prev) => [...prev, emptyLine()]);
+    setLines((prev) => [...prev, emptyLine(`line-${++lineSequence}`)]);
   }
 
   // Totals
@@ -248,7 +253,7 @@ export default function SalesPage() {
       setSuccess(
         `Sale completed · ${data.id.slice(0, 8)} · KES ${total.toLocaleString()}`,
       );
-      setLines([emptyLine()]);
+      setLines([emptyLine(`line-${++lineSequence}`)]);
       setPaymentAmount("");
       await loadRecentSales();
     } catch (err) {
